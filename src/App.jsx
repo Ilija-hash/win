@@ -17,10 +17,8 @@ function Loader({ onComplete }) {
     const fill = fillRef.current;
     const countWrap = countWrapRef.current;
     const count = countRef.current;
-    const reduceMotion = window.matchMedia(
-      "(prefers-reduced-motion: reduce)",
-    ).matches;
-    const duration = reduceMotion ? 0.2 : 3;
+    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const duration = reduceMotion ? 0.1 : 1.3;
     const progress = { value: 0 };
     const updateProgress = () => {
       const value = Math.round(progress.value);
@@ -54,10 +52,7 @@ function Loader({ onComplete }) {
       {
         x: () => {
           const gutter = window.innerWidth < 640 ? 20 : 24;
-          return Math.max(
-            0,
-            window.innerWidth - gutter * 2 - countWrap.offsetWidth,
-          );
+          return Math.max(0, window.innerWidth - gutter * 2 - countWrap.offsetWidth);
         },
         duration,
         ease: "power1.inOut",
@@ -66,8 +61,8 @@ function Loader({ onComplete }) {
     );
     timeline.to(loader, {
       yPercent: -100,
-      duration: reduceMotion ? 0.01 : 0.65,
-      delay: reduceMotion ? 0 : 0.25,
+      duration: reduceMotion ? 0.01 : 0.3,
+      delay: reduceMotion ? 0 : 0.05,
       ease: "expo.inOut",
     });
 
@@ -86,10 +81,7 @@ function Loader({ onComplete }) {
       aria-valuemin="0"
       aria-valuemax="100"
     >
-      <div
-        ref={fillRef}
-        className="absolute inset-y-0 left-0 w-0 bg-[#e9e9e9]"
-      />
+      <div ref={fillRef} className="absolute inset-y-0 left-0 w-0 bg-[#e9e9e9]" />
       <span
         ref={countWrapRef}
         className="loader-count absolute bottom-4 left-5 z-10 inline-grid font-melodrama text-[clamp(9rem,24vw,16rem)] font-normal leading-[0.72] mix-blend-difference sm:bottom-6 sm:left-6"
@@ -110,9 +102,7 @@ function Cursor() {
 
   useEffect(() => {
     const canHover = window.matchMedia("(pointer: fine)").matches;
-    const reduceMotion = window.matchMedia(
-      "(prefers-reduced-motion: reduce)",
-    ).matches;
+    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     if (!canHover || reduceMotion) return undefined;
 
     const cursor = cursorRef.current;
@@ -139,12 +129,10 @@ function Cursor() {
     const onDown = () => cursor.classList.add("is-active");
     const onUp = () => cursor.classList.remove("is-active");
     const onOver = (event) => {
-      if (event.target.closest("a, button"))
-        cursor.classList.add("is-hovering");
+      if (event.target.closest("a, button")) cursor.classList.add("is-hovering");
     };
     const onOut = (event) => {
-      if (event.target.closest("a, button"))
-        cursor.classList.remove("is-hovering");
+      if (event.target.closest("a, button")) cursor.classList.remove("is-hovering");
     };
 
     window.addEventListener("mousemove", onMove);
@@ -169,22 +157,14 @@ function Cursor() {
     };
   }, []);
 
-  return (
-    <div
-      ref={cursorRef}
-      className="custom-cursor is-hidden"
-      aria-hidden="true"
-    />
-  );
+  return <div ref={cursorRef} className="custom-cursor is-hidden" aria-hidden="true" />;
 }
 
 function Header({ menuOpen, setMenuOpen }) {
   const headerRef = useRef(null);
 
   useLayoutEffect(() => {
-    const reduceMotion = window.matchMedia(
-      "(prefers-reduced-motion: reduce)",
-    ).matches;
+    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     const context = gsap.context(() => {
       gsap.fromTo(
         headerRef.current.children,
@@ -207,11 +187,7 @@ function Header({ menuOpen, setMenuOpen }) {
       ref={headerRef}
       className={`fixed inset-x-0 top-0 z-50 flex items-start justify-between px-5 py-4 transition-colors duration-300 sm:px-8 sm:py-6 lg:px-10 lg:py-7 ${menuOpen ? "text-[#e9e9e9]" : "text-[#141414]"}`}
     >
-      <a
-        href="#top"
-        className="text-[1.9rem] font-extrabold leading-none tracking-[-0.07em] sm:text-[2.25rem]"
-        aria-label="win. početna"
-      >
+      <a href="#top" className="text-[1.9rem] font-extrabold leading-none tracking-[-0.07em] sm:text-[2.25rem]" aria-label="win. početna">
         win.
       </a>
       <button
@@ -237,9 +213,7 @@ function BrandMenu({ open, onClose }) {
   useEffect(() => {
     const panel = panelRef.current;
     const brand = brandRef.current;
-    const reduceMotion = window.matchMedia(
-      "(prefers-reduced-motion: reduce)",
-    ).matches;
+    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     const timeline = gsap.timeline();
 
     if (open) {
@@ -325,9 +299,7 @@ function Hero({ ready }) {
   useLayoutEffect(() => {
     if (!ready) return undefined;
 
-    const reduceMotion = window.matchMedia(
-      "(prefers-reduced-motion: reduce)",
-    ).matches;
+    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     const context = gsap.context(() => {
       const titleLines = titleRef.current.querySelectorAll("[data-title-line]");
       const intro = gsap.timeline({ delay: reduceMotion ? 0 : 0.2 });
@@ -358,10 +330,10 @@ function Hero({ ready }) {
         )
         .fromTo(
           imageEntranceRef.current,
-          { y: 100 },
+          { y: () => (window.innerWidth <= 430 ? 150 : 200) },
           {
             y: 0,
-            duration: reduceMotion ? 0 : 1.15,
+            duration: reduceMotion ? 0 : 1.3,
             ease: "power3.out",
             onComplete: () => ScrollTrigger.refresh(),
           },
@@ -405,10 +377,7 @@ function Hero({ ready }) {
   return (
     <main id="top" ref={stageRef} className="relative bg-[#e9e9e9]">
       <section className="overflow-hidden">
-        <div
-          ref={titleRef}
-          className="relative z-10 flex min-h-svh flex-col items-center justify-center px-4 text-center"
-        >
+        <div ref={titleRef} className="relative z-10 flex min-h-svh flex-col items-center justify-center px-4 text-center">
           <div className="overflow-hidden">
             <h1
               data-title-line
@@ -427,10 +396,7 @@ function Hero({ ready }) {
           </div>
         </div>
 
-        <div
-          ref={imageEntranceRef}
-          className="mt-[-150px] flex justify-center min-[431px]:mt-[-200px]"
-        >
+        <div ref={imageEntranceRef} className="mt-[-150px] flex justify-center min-[431px]:mt-[-200px]">
           <div
             ref={imageRef}
             className="hero-image relative h-[70svh] w-[300px] overflow-hidden bg-[#d7d7d7] will-change-[width,border-radius] min-[431px]:h-svh"
@@ -448,27 +414,27 @@ function Hero({ ready }) {
         aria-labelledby="story-title"
         className="flex min-h-svh flex-col bg-[#d8d4ca] px-5 py-[clamp(5rem,10vw,9rem)] text-[#141414] sm:px-8 lg:px-10"
       >
-        <div className="flex items-center justify-between border-b border-[#141414]/30 pb-4 text-[0.7rem] font-bold uppercase tracking-[0.2em] sm:text-xs">
-          <p>O prostoru</p>
-          <p>( 01 )</p>
-        </div>
-
-        <h2
-          id="story-title"
-          className="font-melodrama mt-[clamp(4rem,9vw,8rem)] max-w-[11ch] text-[clamp(4.5rem,12vw,11rem)] font-normal leading-[0.78] tracking-[-0.045em]"
-        >
-          Prostor koji prati tvoj ritam.
-        </h2>
-
-        <div className="mt-auto grid gap-8 border-t border-[#141414]/30 pt-5 sm:grid-cols-2 lg:grid-cols-[1fr_0.65fr]">
-          <p className="max-w-xl text-[clamp(1.25rem,2.3vw,2rem)] font-semibold leading-tight tracking-[-0.035em]">
-            Mesto za sporija jutra, duže razgovore i sve ono između.
-          </p>
-          <p className="max-w-md text-sm leading-relaxed text-[#141414]/65 sm:justify-self-end sm:text-base">
-            Promišljeni detalji, mirne linije i dovoljno prostora da se svaki
-            dan oseća kao kod kuće.
-          </p>
-        </div>
+        {/* <div className="flex items-center justify-between border-b border-[#141414]/30 pb-4 text-[0.7rem] font-bold uppercase tracking-[0.2em] sm:text-xs"> */}
+        {/*   <p>O prostoru</p> */}
+        {/*   <p>( 01 )</p> */}
+        {/* </div> */}
+        {/**/}
+        {/* <h2 */}
+        {/*   id="story-title" */}
+        {/*   className="font-melodrama mt-[clamp(4rem,9vw,8rem)] max-w-[11ch] text-[clamp(4.5rem,12vw,11rem)] font-normal leading-[0.78] tracking-[-0.045em]" */}
+        {/* > */}
+        {/*   Prostor koji prati tvoj ritam. */}
+        {/* </h2> */}
+        {/**/}
+        {/* <div className="mt-auto grid gap-8 border-t border-[#141414]/30 pt-5 sm:grid-cols-2 lg:grid-cols-[1fr_0.65fr]"> */}
+        {/*   <p className="max-w-xl text-[clamp(1.25rem,2.3vw,2rem)] font-semibold leading-tight tracking-[-0.035em]"> */}
+        {/*     Mesto za sporija jutra, duže razgovore i sve ono između. */}
+        {/*   </p> */}
+        {/*   <p className="max-w-md text-sm leading-relaxed text-[#141414]/65 sm:justify-self-end sm:text-base"> */}
+        {/*     Promišljeni detalji, mirne linije i dovoljno prostora da se svaki */}
+        {/*     dan oseća kao kod kuće. */}
+        {/*   </p> */}
+        {/* </div> */}
       </section>
     </main>
   );
@@ -480,9 +446,7 @@ export default function App() {
   const lenisRef = useRef(null);
 
   useEffect(() => {
-    const reduceMotion = window.matchMedia(
-      "(prefers-reduced-motion: reduce)",
-    ).matches;
+    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     if (reduceMotion) return undefined;
 
     const lenis = new Lenis({
