@@ -1,0 +1,162 @@
+@import "tailwindcss";
+
+@font-face {
+  font-family: "Melodrama";
+  src: url("/fonts/Melodrama-Regular.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@theme {
+  --font-sans: "Manrope Variable", "Manrope", sans-serif;
+  --font-melodrama: "Melodrama", serif;
+}
+
+:root {
+  font-family: var(--font-sans);
+  color: #141414;
+  background: #e9e9e9;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+}
+
+html {
+  background: #e9e9e9;
+  scroll-behavior: auto;
+}
+
+html,
+body,
+#root {
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+  overflow-x: hidden;
+}
+
+html.is-loading,
+html.is-loading body,
+body.menu-open {
+  overflow: hidden;
+}
+
+button,
+a {
+  color: inherit;
+}
+
+.has-custom-cursor,
+.has-custom-cursor a,
+.has-custom-cursor button {
+  cursor: none;
+}
+
+.custom-cursor {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 99999;
+  width: 48px;
+  height: 48px;
+  pointer-events: none;
+  color: #fff;
+  mix-blend-mode: exclusion;
+  will-change: transform;
+}
+
+.custom-cursor::before {
+  position: absolute;
+  top: -24px;
+  left: -24px;
+  width: 48px;
+  height: 48px;
+  content: "";
+  border-radius: 999px;
+  background: currentColor;
+  transform: scale(0.6);
+  transition: transform 250ms ease-in-out, opacity 150ms ease;
+}
+
+.custom-cursor.is-hovering::before {
+  transform: scale(1.2);
+}
+
+.custom-cursor.is-active::before {
+  transform: scale(0.5);
+}
+
+.custom-cursor.is-hidden::before {
+  opacity: 0;
+  transform: scale(0);
+}
+
+.menu-button span {
+  position: absolute;
+  left: 0;
+  width: 100%;
+  height: 3px;
+  background: currentColor;
+  transition: top 450ms cubic-bezier(0.76, 0, 0.24, 1),
+    transform 450ms cubic-bezier(0.76, 0, 0.24, 1), opacity 200ms ease;
+}
+
+.menu-button span:nth-child(1) {
+  top: 1px;
+}
+
+.menu-button span:nth-child(2) {
+  top: calc(50% - 1.5px);
+}
+
+.menu-button span:nth-child(3) {
+  top: calc(100% - 4px);
+}
+
+.menu-button.is-open span:nth-child(1),
+.menu-button.is-open span:nth-child(3) {
+  top: calc(50% - 1.5px);
+}
+
+.menu-button.is-open span:nth-child(1) {
+  transform: rotate(45deg);
+}
+
+.menu-button.is-open span:nth-child(2) {
+  opacity: 0;
+}
+
+.menu-button.is-open span:nth-child(3) {
+  transform: rotate(-45deg);
+}
+
+.loader-count {
+  min-width: 2ch;
+  transform-origin: left bottom;
+}
+
+@media (max-width: 767px) {
+  .menu-button span {
+    height: 2.5px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+
+  .hero-image {
+    width: 100% !important;
+    border-top-left-radius: 110px !important;
+    border-top-right-radius: 110px !important;
+    transform: none !important;
+  }
+}
