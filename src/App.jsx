@@ -75,7 +75,7 @@ function Loader({ onComplete }) {
   return (
     <div
       ref={loaderRef}
-      className="fixed inset-0 z-[1000] overflow-hidden bg-[#101010] text-[#e9e9e9]"
+      className="loader-screen fixed inset-0 z-[1000] overflow-hidden bg-[#101010] text-[#e9e9e9]"
       role="progressbar"
       aria-label="Učitavanje stranice"
       aria-valuemin="0"
