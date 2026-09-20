@@ -3,6 +3,10 @@ import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import Lenis from "lenis";
 import roomImage from "./assets/room.webp";
+import Gallery from "./sections/Gallery";
+import Testimonials from "./sections/Testimonials";
+import LocationContact from "./sections/LocationContact";
+import Footer from "./sections/Footer";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -189,7 +193,7 @@ function Header({ menuOpen, setMenuOpen }) {
   return (
     <header
       ref={headerRef}
-      className={`fixed inset-x-0 top-0 z-50 flex items-start justify-between px-5 py-4 transition-colors duration-300 sm:px-8 sm:py-6 lg:px-10 lg:py-7 ${menuOpen ? "text-[#e9e9e9]" : "text-[#141414]"}`}
+      className={`site-header fixed inset-x-0 top-0 z-50 flex items-start justify-between px-5 py-4 transition-colors duration-300 sm:px-8 sm:py-6 lg:px-10 lg:py-7 ${menuOpen ? "text-[#e9e9e9]" : "text-[#141414]"}`}
     >
       <a href="#top" className="text-[1.9rem] font-extrabold leading-none tracking-[-0.07em] sm:text-[2.25rem]" aria-label="win. početna">
         win.
@@ -386,7 +390,7 @@ function Hero({ ready }) {
   }, [ready]);
 
   return (
-    <main id="top" ref={stageRef} className="relative bg-[#e9e9e9]">
+    <div ref={stageRef} className="relative bg-[#e9e9e9]">
       <section className="overflow-hidden">
         <div ref={titleRef} className="relative z-10 flex min-h-svh flex-col items-center justify-center px-4 text-center">
           <div className="overflow-hidden">
@@ -446,13 +450,14 @@ function Hero({ ready }) {
           </p>
         </div>
       </section>
-    </main>
+    </div>
   );
 }
 
 export default function App() {
   const [ready, setReady] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [lightboxOpen, setLightboxOpen] = useState(false);
   const lenisRef = useRef(null);
 
   useEffect(() => {
@@ -481,9 +486,14 @@ export default function App() {
 
   useEffect(() => {
     if (!lenisRef.current) return;
-    if (!ready || menuOpen) lenisRef.current.stop();
+    if (!ready || menuOpen || lightboxOpen) lenisRef.current.stop();
     else lenisRef.current.start();
-  }, [menuOpen, ready]);
+  }, [lightboxOpen, menuOpen, ready]);
+
+  useEffect(() => {
+    document.body.classList.toggle("lightbox-open", lightboxOpen);
+    return () => document.body.classList.remove("lightbox-open");
+  }, [lightboxOpen]);
 
   return (
     <>
@@ -493,7 +503,13 @@ export default function App() {
         <>
           <Header menuOpen={menuOpen} setMenuOpen={setMenuOpen} />
           <BrandMenu open={menuOpen} onClose={() => setMenuOpen(false)} />
-          <Hero ready={ready} />
+          <main id="top">
+            <Hero ready={ready} />
+            <Gallery onLightboxChange={setLightboxOpen} />
+            <Testimonials />
+            <LocationContact />
+          </main>
+          <Footer />
         </>
       )}
     </>

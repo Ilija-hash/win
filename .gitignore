@@ -5,6 +5,12 @@ node_modules/
 dist/
 dist-ssr/
 
+# Sirove fotografije (122+ MB) - lokalna arhiva.
+# U git ulaze samo optimizovane verzije iz src/assets/gallery/,
+# koje generise scripts/optimize-gallery.mjs
+# Vodeca kosa crta je OBAVEZNA: "gallery/" bi poklopilo i src/assets/gallery/.
+/gallery/
+
 # Local environment files
 .env
 .env.*

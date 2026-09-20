@@ -52,19 +52,28 @@ body {
 
 html.is-loading,
 html.is-loading body,
-body.menu-open {
+body.menu-open,
+body.lightbox-open {
   overflow: hidden;
 }
 
-/* Tamne površine: kursor se prebacuje na svetlu boju */
+/* Tamne površine: kursor se prebacuje na svetlu boju.
+   `on-dark` postavlja useDarkSection dok je tamna sekcija u viewportu. */
 html.is-loading,
-body.menu-open {
+body.menu-open,
+body.lightbox-open,
+body.on-dark {
   --cursor-color: #e9e9e9;
 }
 
-button,
-a {
-  color: inherit;
+/* MORA da bude u `base` layeru. Nelayerovano pravilo pobedjuje sve sto je
+   u @layer utilities bez obzira na specificnost, pa bi ovako napisano
+   gazilo svaku Tailwind `text-*` klasu na dugmadima i linkovima. */
+@layer base {
+  button,
+  a {
+    color: inherit;
+  }
 }
 
 .has-custom-cursor,
@@ -166,6 +175,23 @@ a {
 
 .hero-image {
   border-radius: 500px 500px 0 0;
+}
+
+/* Header je fiksiran preko sadržaja: posvetli samo kada je tamna sekcija
+   stvarno IZA trake headera (`header-dark`), a ne čim se pojavi u vidokrugu.
+   Zato je odvojen od `on-dark`, koji prati sredinu ekrana zbog kursora. */
+body.header-dark .site-header {
+  color: #e9e9e9;
+}
+
+/* Google Maps je šaren i bije se sa paletom - obaramo ga na monohromatsko. */
+.map-frame iframe {
+  filter: grayscale(1) contrast(1.05);
+  transition: filter 400ms ease;
+}
+
+.map-frame:hover iframe {
+  filter: grayscale(0.55) contrast(1);
 }
 
 @media (min-width: 640px) {
