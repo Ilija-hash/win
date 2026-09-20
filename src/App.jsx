@@ -132,16 +132,19 @@ function Cursor() {
       if (event.target.closest("a, button")) cursor.classList.add("is-hovering");
     };
     const onOut = (event) => {
-      if (event.target.closest("a, button")) cursor.classList.remove("is-hovering");
+      const target = event.target.closest("a, button");
+      // pointerout okida i pri prelasku na dete elementa - to nije napuštanje
+      if (target && !target.contains(event.relatedTarget)) cursor.classList.remove("is-hovering");
     };
 
     window.addEventListener("mousemove", onMove);
     document.documentElement.addEventListener("mouseleave", onLeave);
     document.documentElement.addEventListener("mouseenter", onEnter);
+    window.addEventListener("blur", onLeave);
     window.addEventListener("mousedown", onDown);
     window.addEventListener("mouseup", onUp);
-    document.addEventListener("mouseover", onOver);
-    document.addEventListener("mouseout", onOut);
+    document.addEventListener("pointerover", onOver);
+    document.addEventListener("pointerout", onOut);
     frame = requestAnimationFrame(render);
 
     return () => {
@@ -150,10 +153,11 @@ function Cursor() {
       window.removeEventListener("mousemove", onMove);
       document.documentElement.removeEventListener("mouseleave", onLeave);
       document.documentElement.removeEventListener("mouseenter", onEnter);
+      window.removeEventListener("blur", onLeave);
       window.removeEventListener("mousedown", onDown);
       window.removeEventListener("mouseup", onUp);
-      document.removeEventListener("mouseover", onOver);
-      document.removeEventListener("mouseout", onOut);
+      document.removeEventListener("pointerover", onOver);
+      document.removeEventListener("pointerout", onOut);
     };
   }, []);
 
@@ -192,13 +196,12 @@ function Header({ menuOpen, setMenuOpen }) {
       </a>
       <button
         type="button"
-        className={`menu-button relative h-7 w-11 sm:h-9 sm:w-14 ${menuOpen ? "is-open" : ""}`}
+        className={`menu-button relative h-6 w-9 sm:h-8 sm:w-11 ${menuOpen ? "is-open" : ""}`}
         aria-label={menuOpen ? "Zatvori meni" : "Otvori meni"}
         aria-expanded={menuOpen}
         aria-controls="brand-menu"
         onClick={() => setMenuOpen((open) => !open)}
       >
-        <span />
         <span />
         <span />
       </button>
@@ -209,15 +212,19 @@ function Header({ menuOpen, setMenuOpen }) {
 function BrandMenu({ open, onClose }) {
   const panelRef = useRef(null);
   const brandRef = useRef(null);
+  const hasOpened = useRef(false);
 
   useEffect(() => {
     const panel = panelRef.current;
     const brand = brandRef.current;
     const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const themeColor = document.querySelector('meta[name="theme-color"]');
     const timeline = gsap.timeline();
 
     if (open) {
+      hasOpened.current = true;
       document.body.classList.add("menu-open");
+      if (themeColor) themeColor.content = "#101010";
       timeline.set(panel, { visibility: "visible" });
       timeline.fromTo(
         panel,
@@ -240,8 +247,10 @@ function BrandMenu({ open, onClose }) {
         },
         reduceMotion ? 0 : "-=0.25",
       );
+      timeline.call(() => brand.focus());
     } else {
       document.body.classList.remove("menu-open");
+      if (themeColor) themeColor.content = "#e9e9e9";
       timeline.to(brand, {
         yPercent: -80,
         opacity: 0,
@@ -255,6 +264,7 @@ function BrandMenu({ open, onClose }) {
         ease: "expo.inOut",
         onComplete: () => gsap.set(panel, { visibility: "hidden" }),
       });
+      if (hasOpened.current) document.querySelector(".menu-button")?.focus();
     }
 
     const onKeyDown = (event) => {
@@ -275,6 +285,7 @@ function BrandMenu({ open, onClose }) {
       id="brand-menu"
       className="invisible fixed inset-0 z-40 flex items-end overflow-hidden bg-[#101010] px-5 pb-8 text-[#e9e9e9] sm:px-8 sm:pb-12 lg:px-10 lg:pb-14"
       aria-hidden={!open}
+      inert={!open}
     >
       <div className="overflow-hidden">
         <a
@@ -414,27 +425,26 @@ function Hero({ ready }) {
         aria-labelledby="story-title"
         className="flex min-h-svh flex-col bg-[#d8d4ca] px-5 py-[clamp(5rem,10vw,9rem)] text-[#141414] sm:px-8 lg:px-10"
       >
-        {/* <div className="flex items-center justify-between border-b border-[#141414]/30 pb-4 text-[0.7rem] font-bold uppercase tracking-[0.2em] sm:text-xs"> */}
-        {/*   <p>O prostoru</p> */}
-        {/*   <p>( 01 )</p> */}
-        {/* </div> */}
-        {/**/}
-        {/* <h2 */}
-        {/*   id="story-title" */}
-        {/*   className="font-melodrama mt-[clamp(4rem,9vw,8rem)] max-w-[11ch] text-[clamp(4.5rem,12vw,11rem)] font-normal leading-[0.78] tracking-[-0.045em]" */}
-        {/* > */}
-        {/*   Prostor koji prati tvoj ritam. */}
-        {/* </h2> */}
-        {/**/}
-        {/* <div className="mt-auto grid gap-8 border-t border-[#141414]/30 pt-5 sm:grid-cols-2 lg:grid-cols-[1fr_0.65fr]"> */}
-        {/*   <p className="max-w-xl text-[clamp(1.25rem,2.3vw,2rem)] font-semibold leading-tight tracking-[-0.035em]"> */}
-        {/*     Mesto za sporija jutra, duže razgovore i sve ono između. */}
-        {/*   </p> */}
-        {/*   <p className="max-w-md text-sm leading-relaxed text-[#141414]/65 sm:justify-self-end sm:text-base"> */}
-        {/*     Promišljeni detalji, mirne linije i dovoljno prostora da se svaki */}
-        {/*     dan oseća kao kod kuće. */}
-        {/*   </p> */}
-        {/* </div> */}
+        <div className="flex items-center justify-between border-b border-[#141414]/30 pb-4 text-[0.7rem] font-bold uppercase tracking-[0.2em] sm:text-xs">
+          <p>O prostoru</p>
+          <p>( 01 )</p>
+        </div>
+
+        <h2
+          id="story-title"
+          className="font-melodrama mt-[clamp(4rem,9vw,8rem)] max-w-[11ch] text-[clamp(4.5rem,12vw,11rem)] font-normal leading-[0.78] tracking-[-0.045em]"
+        >
+          Prostor koji prati tvoj ritam.
+        </h2>
+
+        <div className="mt-auto grid gap-8 border-t border-[#141414]/30 pt-5 sm:grid-cols-2 lg:grid-cols-[1fr_0.65fr]">
+          <p className="max-w-xl text-[clamp(1.25rem,2.3vw,2rem)] font-semibold leading-tight tracking-[-0.035em]">
+            Mesto za sporija jutra, duže razgovore i sve ono između.
+          </p>
+          <p className="max-w-md text-sm leading-relaxed text-[#141414]/65 sm:justify-self-end sm:text-base">
+            Promišljeni detalji, mirne linije i dovoljno prostora da se svaki dan oseća kao kod kuće.
+          </p>
+        </div>
       </section>
     </main>
   );
