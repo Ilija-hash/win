@@ -2,7 +2,9 @@ import { Chevron } from "./Icons";
 /** Veliki naslov u nueve stilu: mala slova + tacka, izlazi iz maske. */
 export function SectionTitle({ id, children, className = "" }) {
   return (
-    <div className={`overflow-hidden pb-[0.08em] pr-[0.08em] ${className}`}>
+    // Maska za reveal animaciju sece samo po visini (overflow-y: clip): dugacak naslov
+    // ("o apartmanu.") tako nikad nije odsecen sa strane.
+    <div className={`overflow-x-visible overflow-y-clip pb-[0.08em] pr-[0.08em] ${className}`}>
       <h2
         id={id}
         data-reveal="line"

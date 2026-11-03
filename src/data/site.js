@@ -17,7 +17,7 @@ export const CONTACT = {
 // Sekcije za meni. `id` mora da se poklapa sa id-jem <section> elementa.
 // "utisci" se sakriva kada u testimonials.js nema nijednog utiska.
 export const NAV = [
-  { id: "o-stanu", label: "o stanu" },
+  { id: "o-stanu", label: "o apartmanu" },
   { id: "galerija", label: "galerija" },
   { id: "sadrzaj", label: "sadržaj" },
   { id: "utisci", label: "utisci" },
@@ -32,7 +32,7 @@ export const AMENITIES = [
   { icon: "elevator", title: "Lift", text: "Bez nošenja kofera uz stepenice." },
   { icon: "washer", title: "Veš mašina", text: "Za duže boravke bez brige." },
   { icon: "dishwasher", title: "Mašina za sudove", text: "Bez pranja sudova na odmoru." },
-  { icon: "parking", title: "Parking", text: "Mesto za auto blizu zgrade." },
+  { icon: "parking", title: "Parking", text: "Parking mesto u sklopu zgrade." },
   { icon: "park", title: "Park u blizini", text: "Park Banjica na par koraka." },
 ];
 

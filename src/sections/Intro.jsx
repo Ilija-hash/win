@@ -37,10 +37,10 @@ export default function Intro() {
       aria-labelledby="intro-title"
       className="bg-[#e9e9e9] page-x py-[clamp(5rem,10vw,9rem)] text-[#141414]"
     >
-      <div className="grid items-center gap-12 lg:grid-cols-[1fr_0.9fr] lg:gap-16">
+      <div className="grid items-center gap-12 lg:grid-cols-[1.1fr_0.9fr] lg:gap-16">
         <div>
           <SectionTitle id="intro-title">
-            o stanu.
+            o apartmanu.
           </SectionTitle>
           <p
             data-reveal
