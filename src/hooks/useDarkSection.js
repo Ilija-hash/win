@@ -2,16 +2,11 @@ import { useLayoutEffect } from "react";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 
 /**
- * Tamne sekcije emituju DVA nezavisna signala, jer kursor i header
- * ne postavljaju isto pitanje:
- *
- *   body.on-dark      -> "sta je ispod KURSORA" (sredina ekrana)
- *   body.header-dark  -> "sta je ispod TRAKE HEADERA" (sam vrh ekrana)
- *
- * Spajanje ova dva daje gresku: header posvetli cim tamna sekcija udje u
- * vidokrug, pa `win.` izbledi dok jos stoji iznad svetlog sadrzaja.
+ * Tamne sekcije postavljaju `body.on-dark` dok su ispod kursora (sredina
+ * ekrana), da se kursor prebaci na svetlu boju. Brojac podrzava vise
+ * tamnih sekcija koje se preklapaju (kontakt + footer).
  */
-const counters = { "on-dark": 0, "header-dark": 0 };
+const counters = { "on-dark": 0 };
 
 function toggle(className, on) {
   counters[className] = Math.max(0, counters[className] + (on ? 1 : -1));
@@ -57,16 +52,7 @@ export function useDarkSection(ref) {
 
     // Kursor: 80/20, a ne 50/50 - footer je nizak i na dnu stranice, pa mu
     // vrh nikad ne stigne do sredine ekrana (nema vise skrola).
-    const disposeCursor = createTrigger(element, "on-dark", "top 80%", "bottom 20%");
-
-    // Header: tacno dok sekcija preseca vrh viewport-a, tj. dok je stvarno
-    // iza fiksirane trake. Za footer se ovo cesto nikad ne desi - i to je tacno,
-    // jer header tada i jeste iznad svetlog sadrzaja.
-    const disposeHeader = createTrigger(element, "header-dark", "top top", "bottom top");
-
-    return () => {
-      disposeCursor();
-      disposeHeader();
-    };
+    // (Header vise ne zavisi od tamnih sekcija - pilula ima sopstvenu pozadinu.)
+    return createTrigger(element, "on-dark", "top 80%", "bottom 20%");
   }, [ref]);
 }

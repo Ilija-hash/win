@@ -1,5 +1,5 @@
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Chevron } from "../components/Icons";
-import { useEffect, useRef, useState } from "react";
 import Lightbox from "../components/Lightbox";
 import { SectionTitle } from "../components/Section";
 import { useReveal } from "../hooks/useReveal";
@@ -44,29 +44,49 @@ function photoCount(count) {
   const lastTwo = count % 100;
   const last = count % 10;
   if (lastTwo >= 11 && lastTwo <= 14) return `${count} fotografija`;
-  if (last === 1) return `${count} fotografija`;
   if (last >= 2 && last <= 4) return `${count} fotografije`;
   return `${count} fotografija`;
 }
 
 const DRAG_THRESHOLD = 5;
 
+const CONTROLS = [
+  { dir: -1, label: "Prethodne sobe", icon: "left", edge: "atStart" },
+  { dir: 1, label: "Sledeće sobe", icon: "right", edge: "atEnd" },
+];
+
 export default function Gallery({ onLightboxChange }) {
   const [openRoom, setOpenRoom] = useState(null);
   const [lightboxIndex, setLightboxIndex] = useState(null);
+  const [edges, setEdges] = useState({ atStart: true, atEnd: false });
   const sectionRef = useRef(null);
-  const trackRef = useRef(null);
+  const rowRef = useRef(null);
   const drag = useRef({ active: false, moved: false, startX: 0, startScroll: 0 });
 
   useReveal(sectionRef);
 
+  // Strelice se gase na krajevima reda (state se menja samo kada se kraj promeni).
+  const updateEdges = useCallback(() => {
+    const row = rowRef.current;
+    if (!row) return;
+    const atStart = row.scrollLeft <= 2;
+    const atEnd = row.scrollLeft >= row.scrollWidth - row.clientWidth - 2;
+    setEdges((prev) => (prev.atStart === atStart && prev.atEnd === atEnd ? prev : { atStart, atEnd }));
+  }, []);
+
+  useEffect(() => {
+    updateEdges();
+    window.addEventListener("resize", updateEdges);
+    return () => window.removeEventListener("resize", updateEdges);
+  }, [updateEdges]);
+
   // Vucenje misem. Touch koristi nativni horizontalni skrol (+ snap).
   useEffect(() => {
-    const track = trackRef.current;
+    const row = rowRef.current;
 
     const onDown = (event) => {
       if (event.pointerType !== "mouse" || event.button !== 0) return;
-      drag.current = { active: true, moved: false, startX: event.clientX, startScroll: track.scrollLeft };
+      drag.current = { active: true, moved: false, startX: event.clientX, startScroll: row.scrollLeft };
     };
     const onMove = (event) => {
       const state = drag.current;
@@ -74,21 +94,21 @@ export default function Gallery({ onLightboxChange }) {
       const delta = event.clientX - state.startX;
       if (!state.moved && Math.abs(delta) > DRAG_THRESHOLD) {
         state.moved = true;
-        track.classList.add("is-dragging");
+        row.classList.add("is-dragging");
       }
-      if (state.moved) track.scrollLeft = state.startScroll - delta;
+      if (state.moved) row.scrollLeft = state.startScroll - delta;
     };
     const onUp = () => {
       if (!drag.current.active) return;
       drag.current.active = false;
-      track.classList.remove("is-dragging");
+      row.classList.remove("is-dragging");
     };
 
-    track.addEventListener("pointerdown", onDown);
+    row.addEventListener("pointerdown", onDown);
     window.addEventListener("pointermove", onMove);
     window.addEventListener("pointerup", onUp);
     return () => {
-      track.removeEventListener("pointerdown", onDown);
+      row.removeEventListener("pointerdown", onDown);
       window.removeEventListener("pointermove", onMove);
       window.removeEventListener("pointerup", onUp);
     };
@@ -104,10 +124,10 @@ export default function Gallery({ onLightboxChange }) {
   };
 
   const step = (direction) => {
-    const track = trackRef.current;
-    const card = track.firstElementChild;
-    const distance = card ? card.offsetWidth + 12 : track.clientWidth * 0.8;
-    track.scrollBy({ left: direction * distance, behavior: "smooth" });
+    const row = rowRef.current;
+    const card = row.firstElementChild;
+    const gap = parseFloat(getComputedStyle(row).columnGap) || 0;
+    row.scrollBy({ left: direction * (card ? card.offsetWidth + gap : row.clientWidth * 0.8), behavior: "smooth" });
   };
 
   const open = (room) => {
@@ -129,20 +149,18 @@ export default function Gallery({ onLightboxChange }) {
       aria-labelledby="gallery-title"
       className="overflow-hidden bg-[#e9e9e9] py-[clamp(5rem,10vw,9rem)] text-[#141414]"
     >
-      <div className="flex items-end justify-between gap-6 px-5 sm:px-8 lg:px-10">
+      <div className="flex items-end justify-between gap-6 page-x">
         <SectionTitle id="gallery-title">galerija.</SectionTitle>
 
         <div data-reveal className="mb-[1.2vw] hidden gap-2 sm:flex">
-          {[
-            { dir: -1, label: "Prethodne sobe", icon: "left" },
-            { dir: 1, label: "Sledeće sobe", icon: "right" },
-          ].map((control) => (
+          {CONTROLS.map((control) => (
             <button
               key={control.dir}
               type="button"
               onClick={() => step(control.dir)}
+              disabled={edges[control.edge]}
               aria-label={control.label}
-              className="flex h-12 w-12 items-center justify-center rounded-full bg-[#141414] text-[#e9e9e9] transition-transform duration-300 hover:scale-105"
+              className="flex h-11 w-11 items-center justify-center rounded-full bg-[#141414] text-[#e9e9e9] transition duration-300 hover:scale-105 disabled:scale-100 disabled:bg-[#141414]/10 disabled:text-[#141414]/35"
             >
               <Chevron direction={control.icon} className="h-5 w-5" />
             </button>
@@ -151,23 +169,26 @@ export default function Gallery({ onLightboxChange }) {
       </div>
 
       <ul
-        ref={trackRef}
+        ref={rowRef}
         data-reveal
         data-cursor="drag"
+        onScroll={updateEdges}
         onClickCapture={onClickCapture}
-        className="gallery-track mt-10 flex gap-3 overflow-x-auto px-5 pointer-coarse:snap-x pointer-coarse:snap-mandatory sm:mt-14 sm:px-8 lg:px-10"
         aria-label="Sobe apartmana"
+        className="gallery-row mt-[clamp(2.5rem,5vw,4rem)] flex gap-3 overflow-x-auto page-x pointer-coarse:snap-x pointer-coarse:snap-mandatory sm:gap-4"
       >
         {rooms.map((room) => (
-          <li key={room.id} className="flex-none snap-start">
+          <li key={room.id} className="w-[72vw] flex-none snap-start sm:w-[42vw] md:w-[36vw] lg:w-[28vw]">
             <button
               type="button"
               onClick={() => open(room)}
               aria-label={`${room.label} - otvori ${photoCount(room.photos.length)}`}
-              className="group relative block h-[62svh] max-h-[640px] min-h-[380px] w-[78vw] overflow-hidden rounded-[1.5rem] bg-[#d7d7d7] text-left sm:w-[46vw] sm:rounded-[2rem] lg:w-[30vw]"
+              className="group relative block aspect-[4/5] max-h-[70svh] min-h-[260px] w-full overflow-hidden rounded-[1.25rem] bg-[#d7d7d7] sm:rounded-[1.75rem]"
             >
               <img
                 src={room.cover.thumb}
+                srcSet={`${room.cover.thumb} 800w, ${room.cover.full} 1600w`}
+                sizes="(min-width: 1024px) 28vw, (min-width: 768px) 36vw, (min-width: 640px) 42vw, 72vw"
                 alt={room.label}
                 loading="lazy"
                 decoding="async"
@@ -175,21 +196,18 @@ export default function Gallery({ onLightboxChange }) {
                 width={room.cover.w}
                 height={room.cover.h}
                 style={{ backgroundImage: `url(${room.cover.lqip})`, backgroundSize: "cover", backgroundPosition: "center" }}
-                className="pointer-events-none absolute inset-0 h-full w-full select-none object-cover transition-transform duration-[900ms] ease-out group-hover:scale-[1.05]"
+                className="pointer-events-none absolute inset-0 h-full w-full select-none object-cover transition-transform duration-[900ms] ease-out group-hover:scale-[1.04]"
               />
-              <span className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black/55 to-transparent" />
-              <span className="absolute inset-x-5 bottom-5 flex items-end justify-between gap-4 text-[#e9e9e9] sm:inset-x-6 sm:bottom-6">
-                <span>
-                  <span className="font-melodrama block text-[clamp(2.25rem,3.6vw,3.5rem)] leading-[0.95] tracking-[-0.03em]">
-                    {room.label}
-                  </span>
-                  <span className="mt-1 block text-sm font-semibold opacity-80">{photoCount(room.photos.length)}</span>
+              <span className="absolute bottom-3 left-3 flex max-w-[calc(100%-1.5rem)] items-center gap-3 rounded-full bg-[#e9e9e9]/[0.92] py-1.5 pl-4 pr-1.5 text-left sm:bottom-4 sm:left-4 sm:py-2 sm:pr-2">
+                <span className="min-w-0 truncate text-sm font-semibold tracking-[-0.01em] sm:text-base">
+                  {room.label}
+                  <span className="ml-2 font-medium opacity-60">{room.photos.length}</span>
                 </span>
                 <span
                   aria-hidden="true"
-                  className="flex h-11 w-11 flex-none items-center justify-center rounded-full bg-[#e9e9e9] text-[#141414] transition-transform duration-300 group-hover:translate-x-0.5"
+                  className="flex h-8 w-8 flex-none items-center justify-center rounded-full bg-[#141414] text-[#e9e9e9] transition-transform duration-300 group-hover:translate-x-0.5"
                 >
-                  <Chevron className="h-4 w-4" />
+                  <Chevron className="h-3.5 w-3.5" />
                 </span>
               </span>
             </button>

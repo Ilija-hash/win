@@ -10,7 +10,7 @@ export default function Footer({ onNavigate }) {
   return (
     <footer
       ref={footerRef}
-      className="surface-dark flex flex-col overflow-hidden bg-[#101010] px-5 pb-6 pt-[clamp(1rem,3vw,2rem)] text-[#e9e9e9] sm:px-8 sm:pb-8 lg:px-10"
+      className="surface-dark flex flex-col overflow-hidden bg-[#101010] page-x pb-6 pt-[clamp(1rem,3vw,2rem)] text-[#e9e9e9] sm:pb-8"
     >
       <div className="grid gap-10 sm:grid-cols-2">
         <nav aria-label="Footer">
@@ -23,7 +23,7 @@ export default function Footer({ onNavigate }) {
                     event.preventDefault();
                     onNavigate?.(item.id);
                   }}
-                  className="inline-flex rounded-full border border-[#e9e9e9]/20 px-5 py-2.5 text-base font-semibold tracking-[-0.02em] transition-colors duration-300 hover:bg-[#e9e9e9] hover:text-[#101010]"
+                  className="inline-flex rounded-full border border-[#e9e9e9]/20 px-4 py-2 text-sm sm:px-5 sm:py-2.5 sm:text-base font-semibold tracking-[-0.02em] transition-colors duration-300 hover:bg-[#e9e9e9] hover:text-[#101010]"
                 >
                   {item.label}
                 </a>

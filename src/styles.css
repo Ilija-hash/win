@@ -1,5 +1,8 @@
 @import "tailwindcss";
 
+/* Niski ekrani (telefon u landscape polozaju): `short:` varijanta. */
+@custom-variant short (@media (max-height: 520px));
+
 @font-face {
   font-family: "Melodrama";
   src: url("/fonts/Melodrama-Regular.woff2") format("woff2");
@@ -19,7 +22,6 @@
   background: #e9e9e9;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
-  --cursor-color: #141414;
 }
 
 html {
@@ -59,12 +61,34 @@ body.lightbox-open {
 }
 
 /* Tamne površine: kursor se prebacuje na svetlu boju.
-   `on-dark` postavlja useDarkSection dok je tamna sekcija u viewportu. */
-html.is-loading,
-body.menu-open,
-body.lightbox-open,
-body.on-dark {
-  --cursor-color: #e9e9e9;
+   `on-dark` postavlja useDarkSection dok je tamna sekcija u viewportu.
+   Boja se postavlja DIREKTNO na kursor (ne preko CSS promenljive na body-ju):
+   promenljiva se nasledjuje, pa bi svaka promena klase preracunala stil celog
+   dokumenta - jedan zakucan frame pri ulasku u tamnu sekciju. */
+html.is-loading .custom-cursor,
+body.menu-open .custom-cursor,
+body.lightbox-open .custom-cursor,
+body.on-dark .custom-cursor {
+  color: #e9e9e9;
+}
+
+/* Horizontalni razmak sekcija. Sadrzaj je ogranicen na 1600px i centriran na
+   velikim ekranima, a pozadine sekcija i dalje idu preko cele sirine. */
+.page-x {
+  --gutter: 1.25rem;
+  padding-inline: max(var(--gutter), calc((100% - 1600px) / 2));
+}
+
+@media (min-width: 640px) {
+  .page-x {
+    --gutter: 2rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .page-x {
+    --gutter: 2.5rem;
+  }
 }
 
 /* MORA da bude u `base` layeru. Nelayerovano pravilo pobedjuje sve sto je
@@ -90,7 +114,7 @@ body.on-dark {
   width: 40px;
   height: 40px;
   pointer-events: none;
-  color: var(--cursor-color);
+  color: #141414;
   transition: color 300ms ease;
   will-change: transform;
 }
@@ -118,35 +142,39 @@ body.on-dark {
   transform: scale(0.24);
 }
 
-/* Nad sliderom: veci krug sa strelicama ‹ › koje blago "pulsiraju" u stranu. */
+/* Ikonica u sredini kruga - za sada koristi je samo zoom u lightbox-u. */
 .custom-cursor::after {
   position: absolute;
-  top: -10px;
-  left: -24px;
-  width: 48px;
-  height: 20px;
   content: "";
-  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 20' fill='none' stroke='%23e9e9e9' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M9 4 3 10l6 6M39 4l6 6-6 6'/%3E%3C/svg%3E")
-    center / contain no-repeat;
   opacity: 0;
   transform: scale(0.5);
   transition: opacity 200ms ease, transform 300ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
+.custom-cursor.is-hidden::after {
+  opacity: 0;
+}
+
+/* Nad redom galerije: diskretan krug (~56px) sa ‹ › - pokazuje da se red vuce.
+   Stoji posle is-hovering pravila, pa uvek pobedi (kartice su dugmad). */
 .custom-cursor.is-drag::before {
   opacity: 1;
-  transform: scale(2.1);
+  transform: scale(1.4);
 }
 
 .custom-cursor.is-drag::after {
+  top: -7px;
+  left: -15px;
+  width: 30px;
+  height: 14px;
+  background: url("data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 30 14%27 fill=%27none%27 stroke=%27%23e9e9e9%27 stroke-width=%271.75%27 stroke-linecap=%27round%27 stroke-linejoin=%27round%27%3E%3Cpath d=%27M6 2 1 7l5 5M24 2l5 5-5 5%27/%3E%3C/svg%3E") center / contain no-repeat;
   opacity: 1;
   transform: scale(1);
-  animation: cursor-drag-nudge 1.4s ease-in-out 300ms infinite;
+  animation: cursor-drag-hint 900ms ease-in-out 250ms 2;
 }
 
-/* Dok se vuce: krug se malo stisne, strelice se priblize. */
 .custom-cursor.is-drag.is-active::before {
-  transform: scale(1.8);
+  transform: scale(1.2);
 }
 
 .custom-cursor.is-drag.is-active::after {
@@ -154,8 +182,14 @@ body.on-dark {
   transform: scale(0.8);
 }
 
-.custom-cursor.is-hidden::after {
-  opacity: 0;
+@keyframes cursor-drag-hint {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scaleX(1.12);
+  }
 }
 
 /* Nad slikom u lightbox-u: krug sa + (uvecaj) ili - (umanji). */
@@ -172,21 +206,10 @@ body.on-dark {
   background: url("data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 20 20%27 fill=%27none%27 stroke=%27%23141414%27 stroke-width=%272%27 stroke-linecap=%27round%27%3E%3Cpath d=%27M10 4v12M4 10h12%27/%3E%3C/svg%3E") center / contain no-repeat;
   opacity: 1;
   transform: scale(1);
-  animation: none;
 }
 
 html.lightbox-zoomed .custom-cursor.is-zoom::after {
   background-image: url("data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 20 20%27 fill=%27none%27 stroke=%27%23141414%27 stroke-width=%272%27 stroke-linecap=%27round%27%3E%3Cpath d=%27M4 10h12%27/%3E%3C/svg%3E");
-}
-
-@keyframes cursor-drag-nudge {
-  0%,
-  100% {
-    transform: scale(1);
-  }
-  50% {
-    transform: scaleX(1.18);
-  }
 }
 
 .custom-cursor.is-hidden::before {
@@ -194,9 +217,8 @@ html.lightbox-zoomed .custom-cursor.is-zoom::after {
   transform: scale(0);
 }
 
-/* Burger sa 3 crte: gornja i donja se spajaju u X, srednja nestaje. */
 .menu-button {
-  --menu-line-gap: 6px;
+  --menu-line-gap: 5px;
 }
 
 .menu-button span {
@@ -214,20 +236,20 @@ html.lightbox-zoomed .custom-cursor.is-zoom::after {
   /* zatvaranje: prvo se odrotiraju, pa se razmaknu */
   transition: translate 280ms cubic-bezier(0.76, 0, 0.24, 1) 180ms,
     rotate 280ms cubic-bezier(0.76, 0, 0.24, 1),
-    scale 280ms cubic-bezier(0.76, 0, 0.24, 1), opacity 200ms ease 180ms;
+    scale 280ms cubic-bezier(0.76, 0, 0.24, 1);
 }
 
 .menu-button span:nth-child(1) {
   translate: 0 calc(-50% - var(--menu-line-gap));
 }
 
-.menu-button span:nth-child(3) {
+.menu-button span:nth-child(2) {
   translate: 0 calc(-50% + var(--menu-line-gap));
 }
 
 /* otvaranje: prvo se spoje, pa rotiraju */
 .menu-button.is-open span {
-  transition-delay: 0ms, 180ms, 180ms, 0ms;
+  transition-delay: 0ms, 180ms, 180ms;
 }
 
 .menu-button.is-open span:nth-child(1) {
@@ -237,11 +259,6 @@ html.lightbox-zoomed .custom-cursor.is-zoom::after {
 }
 
 .menu-button.is-open span:nth-child(2) {
-  opacity: 0;
-  scale: 0 1;
-}
-
-.menu-button.is-open span:nth-child(3) {
   translate: 0 -50%;
   rotate: -45deg;
   scale: 0.8 1;
@@ -316,26 +333,26 @@ html.lightbox-zoomed .custom-cursor.is-zoom::after {
   }
 }
 
-/* Slider galerije: bez vidljivog scrollbar-a, grab kursor kada nema custom kursora. */
-.gallery-track {
+/* Red kartica u galeriji: bez vidljivog scrollbar-a; grab kursor samo kada nema custom kursora. */
+.gallery-row {
   scrollbar-width: none;
   -webkit-user-select: none;
   user-select: none;
 }
 
-.gallery-track::-webkit-scrollbar {
+.gallery-row::-webkit-scrollbar {
   display: none;
 }
 
-html:not(.has-custom-cursor) .gallery-track {
+html:not(.has-custom-cursor) .gallery-row {
   cursor: grab;
 }
 
-html:not(.has-custom-cursor) .gallery-track.is-dragging {
+html:not(.has-custom-cursor) .gallery-row.is-dragging {
   cursor: grabbing;
 }
 
-.gallery-track.is-dragging button {
+.gallery-row.is-dragging button {
   pointer-events: none;
 }
 
@@ -345,7 +362,7 @@ html:not(.has-custom-cursor) .gallery-track.is-dragging {
 
 @media (min-width: 640px) {
   .menu-button {
-    --menu-line-gap: 8px;
+    --menu-line-gap: 6px;
   }
 }
 
@@ -388,5 +405,9 @@ html.lightbox-zoomed:not(.has-custom-cursor) [data-cursor="zoom"] {
 }
 
 .custom-cursor.is-hidden.is-zoom::after {
+  opacity: 0;
+}
+
+.custom-cursor.is-hidden.is-drag::after {
   opacity: 0;
 }

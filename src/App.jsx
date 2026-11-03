@@ -3,6 +3,8 @@ import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import Lenis from "lenis";
 import roomImage from "./assets/room.webp";
+import roomImage800 from "./assets/room-800.webp";
+import roomImage1200 from "./assets/room-1200.webp";
 import Intro from "./sections/Intro";
 import Gallery from "./sections/Gallery";
 import Amenities from "./sections/Amenities";
@@ -276,7 +278,6 @@ function Header({ ready, menuOpen, setMenuOpen }) {
         >
           <span />
           <span />
-          <span />
         </button>
       </div>
     </header>
@@ -365,13 +366,16 @@ function BrandMenu({ open, onClose, onNavigate }) {
     <aside
       ref={panelRef}
       id="brand-menu"
-      className="invisible fixed inset-0 z-40 flex flex-col justify-end overflow-hidden bg-[#101010] px-5 pb-8 text-[#e9e9e9] sm:px-8 sm:pb-12 lg:px-10 lg:pb-14"
+      className="invisible fixed inset-0 z-40 flex flex-col items-center justify-center overflow-hidden bg-[#101010] px-5 pt-20 text-center text-[#e9e9e9] sm:px-8 lg:px-10"
       aria-hidden={!open}
       inert={!open}
     >
       <nav aria-label="Glavni meni">
-        {/* Isti jezik kao "rezerviši." ispod: Melodrama, mala slova, tacka. */}
-        <ul ref={navRef} className="mb-[clamp(1.5rem,5vh,3.5rem)] flex flex-col gap-1 sm:flex-row sm:flex-wrap sm:gap-x-10 sm:gap-y-2">
+        {/* Isti jezik kao "rezerviši." ispod: Melodrama, mala slova, tacka. Sve centrirano. */}
+        <ul
+          ref={navRef}
+          className="mb-[clamp(1.5rem,5vh,3.5rem)] flex flex-col items-center gap-1 sm:flex-row sm:flex-wrap sm:justify-center sm:gap-x-10 sm:gap-y-2"
+        >
           {NAV.map((item) => (
             <li key={item.id}>
               <a
@@ -393,7 +397,7 @@ function BrandMenu({ open, onClose, onNavigate }) {
           ref={brandRef}
           href={getBookingHref()}
           onClick={onClose}
-          className="font-melodrama block pb-[0.12em] pr-[0.08em] pt-[0.16em] text-[clamp(5rem,16vw,18rem)] font-normal leading-[0.84] tracking-[-0.05em]"
+          className="font-melodrama block px-[0.04em] pb-[0.12em] pt-[0.16em] text-[clamp(4rem,13vw,14rem)] font-normal leading-[0.84] tracking-[-0.05em]"
         >
           rezerviši.
         </a>
@@ -522,7 +526,9 @@ function Hero({ ready }) {
           >
             <img
               src={roomImage}
-              alt="Moderan enterijer dnevne sobe i kuhinje"
+              srcSet={`${roomImage800} 800w, ${roomImage1200} 1200w, ${roomImage} 1600w`}
+              sizes="(max-aspect-ratio: 3/4) 75vh, 100vw"
+              alt="Dnevna soba i kuhinja apartmana Win"
               fetchPriority="high"
               decoding="async"
               className="absolute left-1/2 top-0 h-full w-screen max-w-none -translate-x-1/2 object-cover object-center"

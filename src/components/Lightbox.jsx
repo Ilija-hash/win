@@ -190,9 +190,9 @@ export default function Lightbox({ photos, title, index, onClose, onNavigate }) 
       aria-modal="true"
       aria-label={`${title ?? photo.label} - fotografija ${index + 1} od ${photos.length}`}
     >
-      <div className="flex items-center justify-between gap-4 px-4 py-3 sm:px-6">
+      <div className="flex items-center justify-between gap-4 px-4 py-3 sm:px-6 short:py-1.5">
         <p className="flex min-w-0 items-baseline gap-3">
-          <span className="font-melodrama truncate text-[clamp(1.6rem,2.6vw,2.25rem)] leading-none tracking-[-0.03em]">
+          <span className="font-melodrama truncate text-[clamp(1.6rem,2.6vw,2.25rem)] leading-none short:text-2xl tracking-[-0.03em]">
             {title ?? photo.label}
           </span>
           <span className="text-sm font-semibold opacity-60">
@@ -254,7 +254,7 @@ export default function Lightbox({ photos, title, index, onClose, onNavigate }) 
       </div>
 
       {/* Traka sa malim slikama - jasno je da je ovo slider cele sobe. */}
-      <div ref={stripRef} className="lightbox-strip flex gap-2 overflow-x-auto px-4 py-3 sm:justify-center sm:px-6">
+      <div ref={stripRef} className="lightbox-strip flex gap-2 overflow-x-auto px-4 py-3 sm:justify-center sm:px-6 short:hidden">
         {photos.map((item, itemIndex) => (
           <button
             key={item.key ?? item.full}

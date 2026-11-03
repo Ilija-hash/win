@@ -33,16 +33,18 @@ export default function Testimonials() {
 
   const go = (step) => setActive((index) => (index + step + testimonials.length) % testimonials.length);
 
+  // Bez utisaka nema ni sekcije (link "utisci" u meniju se sakriva u src/data/site.js).
+  if (testimonials.length === 0) return null;
+  const hasMany = testimonials.length > 1;
+
   return (
     <section
       ref={sectionRef}
       id="utisci"
       aria-labelledby="testimonials-title"
-      className="bg-[#d8d4ca] px-5 pb-[clamp(7rem,13vw,12rem)] pt-[clamp(5rem,10vw,9rem)] text-[#141414] sm:px-8 lg:px-10"
+      className="bg-[#d8d4ca] page-x pb-[clamp(7rem,13vw,12rem)] pt-[clamp(5rem,10vw,9rem)] text-[#141414]"
     >
-      <SectionTitle id="testimonials-title">
-        utisci.
-      </SectionTitle>
+      <SectionTitle id="testimonials-title">utisci.</SectionTitle>
 
       <div data-reveal className="mt-[clamp(2.5rem,6vw,4.5rem)] rounded-[1.75rem] bg-[#ece9e2] p-6 sm:rounded-[2.5rem] sm:p-10 lg:p-14">
         {/* Svi citati su slozeni u istu celiju, pa visina ne skace pri promeni. */}
@@ -51,12 +53,21 @@ export default function Testimonials() {
             const isActive = index === active;
             return (
               <figure
-                key={`${item.name}-${item.date}`}
+                key={`${index}-${item.name}`}
                 aria-hidden={!isActive}
                 className={`col-start-1 row-start-1 ${isActive ? "" : "invisible opacity-0"}`}
               >
-                <blockquote className="font-melodrama max-w-[28ch] text-[clamp(2rem,4.6vw,4.25rem)] leading-[1] tracking-[-0.035em]">
-                  „{item.text}”
+                {/* Melodrama nema znakove „ ” (browser ih crta drugim fontom), pa je navodnik
+                    nacrtan kao SVG - uvek isti, nezavisno od fonta. */}
+                <svg
+                  viewBox="0 0 48 36"
+                  aria-hidden="true"
+                  className="mb-5 h-7 w-auto fill-current opacity-90 sm:mb-7 sm:h-10"
+                >
+                  <path d="M0 36V22.6C0 9.9 6.9 2.3 19 0l2.2 5.2C14.3 7.4 10.9 11.7 10.5 18H20v18H0Zm27 0V22.6C27 9.9 33.9 2.3 46 0l2 5.2c-6.9 2.2-10.3 6.5-10.7 12.8H47v18H27Z" />
+                </svg>
+                <blockquote className="font-melodrama max-w-[28ch] text-[clamp(1.65rem,4.6vw,4.25rem)] leading-[1] tracking-[-0.035em]">
+                  {item.text}
                 </blockquote>
                 <figcaption className="mt-8 flex items-center gap-3">
                   <span className="flex h-11 w-11 items-center justify-center rounded-full bg-[#141414] text-sm font-bold text-[#e9e9e9]">
@@ -64,9 +75,7 @@ export default function Testimonials() {
                   </span>
                   <span className="text-sm leading-tight">
                     <span className="block font-bold">{item.name}</span>
-                    <span className="opacity-60">
-                      {item.city} · {item.date}
-                    </span>
+                    <span className="opacity-60">{[item.city, item.date].filter(Boolean).join(" · ")}</span>
                   </span>
                 </figcaption>
               </figure>
@@ -74,35 +83,42 @@ export default function Testimonials() {
           })}
         </div>
 
-        <div className="mt-10 flex items-center justify-between gap-6">
-          <div className="flex gap-2">
-            {testimonials.map((item, index) => (
-              <button
-                key={`${item.name}-dot`}
-                type="button"
-                onClick={() => setActive(index)}
-                aria-label={`Utisak ${index + 1} od ${testimonials.length}`}
-                aria-current={index === active}
-                className={`h-2.5 rounded-full transition-all duration-500 ${
-                  index === active ? "w-8 bg-[#141414]" : "w-2.5 bg-[#141414]/25 hover:bg-[#141414]/50"
-                }`}
-              />
-            ))}
+        {hasMany && (
+          <div className="mt-10 flex items-center justify-between gap-6">
+            {/* Vidljiva tackica je mala, ali dugme oko nje ima ~26px za prst. */}
+            <div className="-ml-2 flex">
+              {testimonials.map((item, index) => (
+                <button
+                  key={`${index}-${item.name}-dot`}
+                  type="button"
+                  onClick={() => setActive(index)}
+                  aria-label={`Utisak ${index + 1} od ${testimonials.length}`}
+                  aria-current={index === active}
+                  className="group p-2"
+                >
+                  <span
+                    className={`block h-2.5 rounded-full transition-[width,background-color] duration-500 ${
+                      index === active ? "w-8 bg-[#141414]" : "w-2.5 bg-[#141414]/25 group-hover:bg-[#141414]/50"
+                    }`}
+                  />
+                </button>
+              ))}
+            </div>
+            <div className="flex gap-2">
+              {CONTROLS.map((control) => (
+                <button
+                  key={control.step}
+                  type="button"
+                  onClick={() => go(control.step)}
+                  aria-label={control.label}
+                  className="flex h-11 w-11 items-center justify-center rounded-full bg-[#141414] text-[#e9e9e9] transition-transform duration-300 hover:scale-105 sm:h-12 sm:w-12"
+                >
+                  <Chevron direction={control.icon} className="h-5 w-5" />
+                </button>
+              ))}
+            </div>
           </div>
-          <div className="flex gap-2">
-            {CONTROLS.map((control) => (
-              <button
-                key={control.step}
-                type="button"
-                onClick={() => go(control.step)}
-                aria-label={control.label}
-                className="flex h-12 w-12 items-center justify-center rounded-full bg-[#141414] text-[#e9e9e9] transition-transform duration-300 hover:scale-105"
-              >
-                <Chevron direction={control.icon} className="h-5 w-5" />
-              </button>
-            ))}
-          </div>
-        </div>
+        )}
       </div>
     </section>
   );

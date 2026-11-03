@@ -4,6 +4,7 @@ import { PillLink, SectionTitle } from "../components/Section";
 import { useReveal } from "../hooks/useReveal";
 import { getBookingHref } from "../lib/booking";
 import terraceImage from "../assets/gallery/terasa/20240412_163603-1600.webp";
+import terraceImage800 from "../assets/gallery/terasa/20240412_163603-800.webp";
 
 export default function Intro() {
   const sectionRef = useRef(null);
@@ -33,7 +34,7 @@ export default function Intro() {
       ref={sectionRef}
       id="o-stanu"
       aria-labelledby="intro-title"
-      className="bg-[#e9e9e9] px-5 py-[clamp(5rem,10vw,9rem)] text-[#141414] sm:px-8 lg:px-10"
+      className="bg-[#e9e9e9] page-x py-[clamp(5rem,10vw,9rem)] text-[#141414]"
     >
       <div className="grid items-center gap-12 lg:grid-cols-[1fr_0.9fr] lg:gap-16">
         <div>
@@ -42,14 +43,18 @@ export default function Intro() {
           </SectionTitle>
           <p
             data-reveal
-            className="mt-8 max-w-[22ch] text-[clamp(1.6rem,3vw,2.75rem)] font-semibold leading-[1.1] tracking-[-0.04em]"
+            className="mt-8 max-w-[24ch] text-[clamp(1.6rem,3vw,2.75rem)] font-semibold leading-[1.1] tracking-[-0.04em]"
           >
-            Svetao, miran stan za sporija jutra, duge šetnje i sve ono između.
+            {/* Odgovor na pitanje iz hero-a: "nigde nije kao kod kuće?" */}
+            Uživajte u udobnosti svog doma, čak i kada ste daleko od njega.
           </p>
-          <p data-reveal className="mt-6 max-w-lg text-base leading-relaxed text-[#141414]/65 sm:text-lg">
-            Promišljeni detalji, tople boje i sve što je potrebno za odmor — bilo da dolazite u dvoje, sa porodicom ili
-            društvom. Banja, planina i centar grada su na par minuta hoda.
-          </p>
+          <div data-reveal className="mt-6 max-w-lg space-y-4 text-base leading-relaxed text-[#141414]/65 sm:text-lg">
+            <p>
+              Apartman Win se nalazi na prvom spratu nove zgrade, u mirnom delu Sokobanje — blizu parka Banjica i hotela
+              Sunce, samo 500 metara od centra grada.
+            </p>
+            <p>Potpuno je opremljen i sastoji se od dnevne sobe, trpezarije, kuhinje, kupatila, spavaće sobe i terase.</p>
+          </div>
           <div data-reveal className="mt-10">
             <PillLink href={getBookingHref()}>Rezerviši boravak</PillLink>
           </div>
@@ -58,8 +63,10 @@ export default function Intro() {
         <div data-reveal className="relative aspect-[4/5] overflow-hidden rounded-[1.5rem] bg-[#d7d7d7] sm:rounded-[2rem]">
           <img
             ref={imageRef}
-            src={terraceImage}
-            alt="Terasa apartmana"
+            src={terraceImage800}
+            srcSet={`${terraceImage800} 800w, ${terraceImage} 1600w`}
+            sizes="(min-width: 1024px) 45vw, 100vw"
+            alt="Terasa apartmana Win u Sokobanji"
             loading="lazy"
             decoding="async"
             className="absolute inset-x-0 -top-[10%] h-[120%] w-full object-cover"

@@ -1,5 +1,5 @@
 import { Chevron } from "../components/Icons";
-import { useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { PillLink, SectionTitle } from "../components/Section";
 import { useDarkSection } from "../hooks/useDarkSection";
 import { useReveal } from "../hooks/useReveal";
@@ -13,6 +13,81 @@ const LINES = [
   { label: "Instagram", value: CONTACT.instagram, href: CONTACT.instagramHref, external: true },
 ];
 
+/**
+ * Google mapa bez laga:
+ *  - iframe (1 MB+ JS) se ucitava unapred, u slobodnom trenutku, kada je mapa
+ *    ~800px ispred - a ne usred skrola na nju;
+ *  - providan sloj preko mape pusta tockic/prst da skroluju STRANICU (inace
+ *    iframe "proguta" skrol i Lenis zastane). Klik/tap aktivira mapu, a izlazak
+ *    misem je ponovo zakljuca.
+ */
+function MapEmbed() {
+  const frameRef = useRef(null);
+  const [load, setLoad] = useState(false);
+  const [active, setActive] = useState(false);
+
+  useEffect(() => {
+    const frame = frameRef.current;
+    if (!frame) return undefined;
+    let idle;
+    const schedule = window.requestIdleCallback ?? ((callback) => setTimeout(callback, 200));
+    const cancel = window.cancelIdleCallback ?? clearTimeout;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (!entry.isIntersecting) return;
+        observer.disconnect();
+        idle = schedule(() => setLoad(true));
+      },
+      { rootMargin: "800px 0px" },
+    );
+    observer.observe(frame);
+    return () => {
+      observer.disconnect();
+      if (idle) cancel(idle);
+    };
+  }, []);
+
+  return (
+    <div
+      ref={frameRef}
+      data-reveal
+      onPointerLeave={() => setActive(false)}
+      className="map-frame relative aspect-[4/3] overflow-hidden rounded-[1.5rem] bg-[#1c1c1c] sm:rounded-[2rem] lg:aspect-auto lg:min-h-[34rem]"
+    >
+      {/* Dok se mapa ne ucita: adresa na tamnoj pozadini */}
+      <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 text-center opacity-60">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true" className="h-8 w-8">
+          <path d="M12 21s-7-6.1-7-11.5a7 7 0 0 1 14 0C19 14.9 12 21 12 21Z" />
+          <circle cx="12" cy="9.5" r="2.5" />
+        </svg>
+        <p className="text-sm font-semibold">{CONTACT.address}</p>
+      </div>
+
+      {load && (
+        <iframe
+          src={CONTACT.mapsEmbed}
+          title={`Mapa - ${CONTACT.address}`}
+          referrerPolicy="no-referrer-when-downgrade"
+          className="absolute inset-0 h-full w-full border-0"
+        />
+      )}
+
+      {!active && (
+        <button
+          type="button"
+          onClick={() => setActive(true)}
+          aria-label="Aktiviraj mapu za pomeranje i zumiranje"
+          className="group absolute inset-0 flex items-end justify-center pb-5"
+        >
+          <span className="rounded-full bg-[#101010]/80 px-4 py-2 text-xs font-semibold text-[#e9e9e9] opacity-0 transition-opacity duration-300 group-hover:opacity-100 group-focus-visible:opacity-100 pointer-coarse:opacity-100">
+            Klikni za interakciju sa mapom
+          </span>
+        </button>
+      )}
+    </div>
+  );
+}
+
 export default function LocationContact() {
   const sectionRef = useRef(null);
   useDarkSection(sectionRef);
@@ -24,7 +99,7 @@ export default function LocationContact() {
       ref={sectionRef}
       id="kontakt"
       aria-labelledby="contact-title"
-      className="surface-dark relative z-10 -mt-[2.5rem] rounded-t-[2rem] bg-[#101010] px-5 py-[clamp(5rem,10vw,9rem)] text-[#e9e9e9] sm:-mt-[3.5rem] sm:rounded-t-[3.5rem] sm:px-8 lg:px-10"
+      className="surface-dark relative z-10 -mt-[2.5rem] rounded-t-[2rem] bg-[#101010] page-x py-[clamp(5rem,10vw,9rem)] text-[#e9e9e9] sm:-mt-[3.5rem] sm:rounded-t-[3.5rem]"
     >
       <SectionTitle id="contact-title">
         kontakt.
@@ -37,7 +112,7 @@ export default function LocationContact() {
           </p>
 
           <PillLink href={getBookingHref()} tone="light" className="mt-8">
-            Rezerviši — {CONTACT.phone}
+            Rezerviši<span className="hidden min-[381px]:inline"> — {CONTACT.phone}</span>
           </PillLink>
 
           <ul className="mt-10 grid gap-2">
@@ -64,18 +139,7 @@ export default function LocationContact() {
           </ul>
         </div>
 
-        <div
-          data-reveal
-          className="map-frame relative aspect-[4/3] overflow-hidden rounded-[1.5rem] bg-[#1c1c1c] sm:rounded-[2rem] lg:aspect-auto lg:min-h-[34rem]"
-        >
-          <iframe
-            src={CONTACT.mapsEmbed}
-            title={`Mapa - ${CONTACT.address}`}
-            loading="lazy"
-            referrerPolicy="no-referrer-when-downgrade"
-            className="absolute inset-0 h-full w-full border-0"
-          />
-        </div>
+        <MapEmbed />
       </div>
     </section>
   );

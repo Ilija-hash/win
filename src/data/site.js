@@ -1,6 +1,8 @@
 // Jedno mesto za sav sadrzaj sajta. Kasnije ovo dolazi iz Supabase-a
 // (admin panel), pa komponente ne treba da znaju odakle stize.
 
+import { testimonials } from "./testimonials";
+
 export const CONTACT = {
   phone: "0611187040",
   phoneHref: "tel:0611187040",
@@ -13,13 +15,14 @@ export const CONTACT = {
 };
 
 // Sekcije za meni. `id` mora da se poklapa sa id-jem <section> elementa.
+// "utisci" se sakriva kada u testimonials.js nema nijednog utiska.
 export const NAV = [
   { id: "o-stanu", label: "o stanu" },
   { id: "galerija", label: "galerija" },
   { id: "sadrzaj", label: "sadržaj" },
   { id: "utisci", label: "utisci" },
   { id: "kontakt", label: "kontakt" },
-];
+].filter((item) => item.id !== "utisci" || testimonials.length > 0);
 
 // `icon` je kljuc iz src/components/Icons.jsx.
 export const AMENITIES = [
@@ -30,7 +33,7 @@ export const AMENITIES = [
   { icon: "washer", title: "Veš mašina", text: "Za duže boravke bez brige." },
   { icon: "dishwasher", title: "Mašina za sudove", text: "Bez pranja sudova na odmoru." },
   { icon: "parking", title: "Parking", text: "Mesto za auto blizu zgrade." },
-  { icon: "park", title: "Park u blizini", text: "Zelenilo i šetnja na par koraka." },
+  { icon: "park", title: "Park u blizini", text: "Park Banjica na par koraka." },
 ];
 
 // Sobe u galeriji. `folders` = folderi u src/assets/gallery koji pripadaju sobi,
