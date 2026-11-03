@@ -104,8 +104,13 @@ export default function Testimonials() {
 
         {hasMany && (
           <div className="mt-10 flex items-center justify-between gap-6">
-            {/* Vidljiva tackica je mala, ali dugme oko nje ima ~26px za prst. */}
-            <div className="-ml-2.5 flex">
+            {/* Telefon: brojac umesto tackica - staje za bilo koji broj utisaka
+                (9 tackica + strelice je bilo sire od ekrana i sirilo celu stranicu). */}
+            <p className="text-sm font-semibold tabular-nums sm:hidden" aria-live="polite">
+              {active + 1} / {testimonials.length}
+            </p>
+            {/* Od sm: tackice; vidljiva je mala, a dugme oko nje ima ~30px za prst. */}
+            <div className="-ml-2.5 hidden min-w-0 flex-wrap sm:flex">
               {testimonials.map((item, index) => (
                 <button
                   key={`${index}-${item.name}-dot`}
@@ -123,7 +128,7 @@ export default function Testimonials() {
                 </button>
               ))}
             </div>
-            <div className="flex gap-2">
+            <div className="flex flex-none gap-2">
               {CONTROLS.map((control) => (
                 <button
                   key={control.step}

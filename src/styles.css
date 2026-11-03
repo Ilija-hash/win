@@ -37,7 +37,14 @@ body,
 
 body {
   margin: 0;
-  overflow-x: hidden;
+}
+
+/* Zastita: ako nesto izviri van ekrana, telefon ne siri raspored (inace stranica
+   moze da se odzumira, a fixed elementi - navbar, lightbox - se rastegnu).
+   `clip` ne pravi scroll kontejner, pa ne smeta Lenis-u ni position: fixed. */
+html,
+body {
+  overflow-x: clip;
 }
 
 ::selection {
