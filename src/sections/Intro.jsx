@@ -57,7 +57,9 @@ export default function Intro() {
             <p>Potpuno je opremljen i sastoji se od dnevne sobe, trpezarije, kuhinje, kupatila, spavaće sobe i terase.</p>
           </div>
           <div data-reveal className="mt-10">
-            <PillLink href={getBookingHref()}>Rezerviši boravak</PillLink>
+            <PillLink href={getBookingHref()} data-booking>
+                Rezerviši boravak
+              </PillLink>
           </div>
         </div>
 

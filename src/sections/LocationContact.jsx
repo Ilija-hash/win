@@ -47,6 +47,17 @@ function MapEmbed() {
     };
   }, []);
 
+  // Aktivna mapa se zakljucava cim izadje iz ekrana. Na telefonu `pointerleave`
+  // ne stize iz iframe-a, pa bi mapa inace zauvek "gutala" skrol prstom.
+  useEffect(() => {
+    if (!active) return undefined;
+    const observer = new IntersectionObserver(([entry]) => {
+      if (!entry.isIntersecting) setActive(false);
+    });
+    observer.observe(frameRef.current);
+    return () => observer.disconnect();
+  }, [active]);
+
   return (
     <div
       ref={frameRef}

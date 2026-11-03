@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import gsap from "gsap";
 import { Chevron, UiIcon } from "./Icons";
 
@@ -15,6 +16,7 @@ export default function Lightbox({ photos, title, index, onClose, onNavigate }) 
   const figureRef = useRef(null);
   const imageRef = useRef(null);
   const stripRef = useRef(null);
+  const closeRef = useRef(null);
   const touch = useRef({ startX: 0, startY: 0, lastTap: 0, originX: 50, originY: 50, moved: false });
   const lastTouchAt = useRef(0);
   const [zoomed, setZoomed] = useState(false);
@@ -83,6 +85,18 @@ export default function Lightbox({ photos, title, index, onClose, onNavigate }) 
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [goNext, goPrev, onClose, open, zoomed]);
+
+  // Tastatura ostaje u lightbox-u: sajt iza (#root) je inert dok je otvoren,
+  // a fokus pocinje na dugmetu za zatvaranje. Lightbox je portal u <body>, van #root-a.
+  useEffect(() => {
+    if (!open) return undefined;
+    const root = document.getElementById("root");
+    if (root) root.inert = true;
+    closeRef.current?.focus({ preventScroll: true });
+    return () => {
+      if (root) root.inert = false;
+    };
+  }, [open]);
 
   // Ulazna animacija panela
   useEffect(() => {
@@ -198,7 +212,7 @@ export default function Lightbox({ photos, title, index, onClose, onNavigate }) 
   const navButton =
     "absolute top-1/2 z-10 flex h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full bg-[#101010]/45 backdrop-blur-md transition duration-300 hover:bg-[#101010]/70";
 
-  return (
+  return createPortal(
     <div
       ref={panelRef}
       className="fixed inset-0 z-[900] flex flex-col bg-[#101010] text-[#e9e9e9]"
@@ -226,6 +240,7 @@ export default function Lightbox({ photos, title, index, onClose, onNavigate }) 
             <UiIcon name={zoomed ? "zoomOut" : "zoomIn"} />
           </button>
           <button
+            ref={closeRef}
             type="button"
             onClick={onClose}
             aria-label="Zatvori galeriju"
@@ -288,6 +303,7 @@ export default function Lightbox({ photos, title, index, onClose, onNavigate }) 
           </button>
         ))}
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }

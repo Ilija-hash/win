@@ -33,6 +33,21 @@ export default function Testimonials() {
 
   const go = (step) => setActive((index) => (index + step + testimonials.length) % testimonials.length);
 
+  // Swipe prstom levo/desno menja utisak. Vertikalni pokret ostaje skrol stranice
+  // (touch-pan-y), a swipe mora da bude vise horizontalan nego vertikalan.
+  const swipe = useRef({ x: 0, y: 0 });
+  const onTouchStart = (event) => {
+    const point = event.touches[0];
+    swipe.current = { x: point.clientX, y: point.clientY };
+  };
+  const onTouchEnd = (event) => {
+    const point = event.changedTouches[0];
+    const dx = point.clientX - swipe.current.x;
+    const dy = point.clientY - swipe.current.y;
+    if (Math.abs(dx) < 50 || Math.abs(dx) < Math.abs(dy) * 1.2) return;
+    go(dx < 0 ? 1 : -1);
+  };
+
   // Bez utisaka nema ni sekcije (link "utisci" u meniju se sakriva u src/data/site.js).
   if (testimonials.length === 0) return null;
   const hasMany = testimonials.length > 1;
@@ -46,7 +61,11 @@ export default function Testimonials() {
     >
       <SectionTitle id="testimonials-title">utisci.</SectionTitle>
 
-      <div data-reveal className="mt-[clamp(2.5rem,6vw,4.5rem)] rounded-[1.5rem] bg-[#ece9e2] p-6 sm:rounded-[2rem] sm:p-10 lg:p-14 short:p-6">
+      <div
+        data-reveal
+        onTouchStart={hasMany ? onTouchStart : undefined}
+        onTouchEnd={hasMany ? onTouchEnd : undefined}
+        className="mt-[clamp(2.5rem,6vw,4.5rem)] touch-pan-y pointer-coarse:select-none rounded-[1.5rem] bg-[#ece9e2] p-6 sm:rounded-[2rem] sm:p-10 lg:p-14 short:p-6">
         {/* Svi citati su slozeni u istu celiju, pa visina ne skace pri promeni. */}
         <div ref={quotesRef} className="grid">
           {testimonials.map((item, index) => {

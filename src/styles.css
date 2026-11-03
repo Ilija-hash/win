@@ -377,6 +377,9 @@ html.lightbox-zoomed .custom-cursor.is-zoom::after {
 
 /* Red kartica u galeriji: bez vidljivog scrollbar-a; grab kursor samo kada nema custom kursora. */
 .gallery-row {
+  /* Snap poravnava karticu sa razmakom od ivice (kao naslov), a ne sa samom ivicom -
+     inace telefon odmah "uskoci" 20px i red izgleda kao da je vec skrolovan. */
+  scroll-padding-inline: max(var(--gutter), calc((100% - 1600px) / 2));
   scrollbar-width: none;
   -webkit-user-select: none;
   user-select: none;

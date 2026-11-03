@@ -89,6 +89,7 @@ export default function Gallery({ onLightboxChange }) {
   const sectionRef = useRef(null);
   const rowRef = useRef(null);
   const drag = useRef({ active: false, moved: false, startX: 0, startScroll: 0 });
+  const openerRef = useRef(null);
 
   useReveal(sectionRef);
 
@@ -178,7 +179,8 @@ export default function Gallery({ onLightboxChange }) {
     row.scrollBy({ left: direction * (card ? card.offsetWidth + gap : row.clientWidth * 0.8), behavior: "smooth" });
   };
 
-  const open = (room) => {
+  const open = (room, event) => {
+    openerRef.current = event?.currentTarget ?? null;
     setOpenRoom(room);
     setLightboxIndex(0);
     onLightboxChange?.(true);
@@ -188,6 +190,8 @@ export default function Gallery({ onLightboxChange }) {
     setLightboxIndex(null);
     setOpenRoom(null);
     onLightboxChange?.(false);
+    // Fokus nazad na karticu koja je otvorila sobu (posle uklanjanja inert-a sa #root).
+    requestAnimationFrame(() => openerRef.current?.focus({ preventScroll: true }));
   };
 
   return (
@@ -229,7 +233,7 @@ export default function Gallery({ onLightboxChange }) {
           <li key={room.id} className="w-[72vw] flex-none snap-start sm:w-[42vw] md:w-[36vw] lg:w-[28vw]">
             <button
               type="button"
-              onClick={() => open(room)}
+              onClick={(event) => open(room, event)}
               onPointerEnter={() => preloadRoom(room)}
               onTouchStart={() => preloadRoom(room)}
               onFocus={() => preloadRoom(room)}

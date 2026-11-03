@@ -4,7 +4,7 @@ import { useDarkSection } from "../hooks/useDarkSection";
 import { CONTACT, NAV } from "../data/site";
 
 // Footer je nastavak tamne kontakt sekcije - bez ponavljanja kontakata (vec su iznad).
-export default function Footer({ onNavigate }) {
+export default function Footer({ onNavigate, inert = false }) {
   const footerRef = useRef(null);
   useDarkSection(footerRef);
 
@@ -14,7 +14,7 @@ export default function Footer({ onNavigate }) {
   };
 
   return (
-    <footer ref={footerRef} className="surface-dark bg-[#101010] page-x pb-[clamp(1.5rem,3vw,2.5rem)] text-[#e9e9e9]">
+    <footer ref={footerRef} inert={inert} className="surface-dark bg-[#101010] page-x pb-[clamp(1.5rem,3vw,2.5rem)] text-[#e9e9e9]">
       <div className="flex flex-wrap items-center justify-between gap-x-8 gap-y-5 border-t border-[#e9e9e9]/10 pt-6 sm:pt-8">
         <a
           href="#top"

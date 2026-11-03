@@ -208,7 +208,7 @@ function Cursor() {
   return <div ref={cursorRef} className="custom-cursor is-hidden" aria-hidden="true" />;
 }
 
-function Header({ ready, menuOpen, setMenuOpen }) {
+function Header({ ready, menuOpen, setMenuOpen, onNavigate }) {
   const headerRef = useRef(null);
   const barRef = useRef(null);
   // "Tamni" izgled headera prati meni: odmah pri otvaranju, a pri zatvaranju
@@ -269,7 +269,15 @@ function Header({ ready, menuOpen, setMenuOpen }) {
       }`}
     >
       <div ref={barRef} className="header-bar flex items-center justify-between">
-        <a href="#top" className="text-[1.9rem] font-extrabold leading-none tracking-[-0.07em] sm:text-[2.25rem]" aria-label="win. početna">
+        <a
+          href="#top"
+          onClick={(event) => {
+            event.preventDefault();
+            onNavigate("top"); // zatvara i meni, ako je otvoren
+          }}
+          className="text-[1.9rem] font-extrabold leading-none tracking-[-0.07em] sm:text-[2.25rem]"
+          aria-label="win. početna"
+        >
           win.
         </a>
         <button
@@ -400,6 +408,7 @@ function BrandMenu({ open, onClose, onNavigate }) {
         <a
           ref={brandRef}
           href={getBookingHref()}
+          data-booking
           onClick={onClose}
           className="font-melodrama block px-[0.04em] pb-[0.12em] pt-[0.16em] text-[clamp(4rem,13vw,14rem)] font-normal leading-[0.84] tracking-[-0.05em]"
         >
@@ -591,14 +600,24 @@ export default function App() {
 
   // Navigacija na sekciju. Iz menija: prvo zatvori meni (skida `menu-open`
   // i overflow:hidden sa body-ja), pa tek onda skroluj iza panela koji se zatvara.
+  // Naslov sekcije staje 24px ispod navbara (pilula je fiksna i prekrila bi ga).
+  // Cilj je omotac naslova iz SectionTitle: sam <h2> je pre reveal animacije
+  // pomeren nadole, pa bi njegova pozicija bila pogresna.
   const navigate = useCallback(
-    (id) => {
-      const target = id === "top" ? 0 : document.getElementById(id);
-      if (target === null) return;
+    (id, { immediate = false } = {}) => {
+      const section = id === "top" ? null : document.getElementById(id);
+      if (id !== "top" && !section) return;
       const scroll = () => {
-        if (lenisRef.current) lenisRef.current.scrollTo(target, { force: true, duration: 1.4 });
-        else if (target === 0) window.scrollTo(0, 0);
-        else target.scrollIntoView();
+        if (!section) {
+          if (lenisRef.current) lenisRef.current.scrollTo(0, { force: true, duration: 1.4, immediate });
+          else window.scrollTo(0, 0);
+          return;
+        }
+        const target = section.querySelector("h2")?.parentElement ?? section;
+        const headerBottom = document.querySelector(".header-bar")?.getBoundingClientRect().bottom ?? 0;
+        const offset = -(headerBottom + 24);
+        if (lenisRef.current) lenisRef.current.scrollTo(target, { offset, force: true, duration: 1.4, immediate });
+        else window.scrollTo(0, target.getBoundingClientRect().top + window.scrollY + offset);
       };
       if (menuOpen) {
         setMenuOpen(false);
@@ -609,6 +628,31 @@ export default function App() {
   );
 
   const closeMenu = useCallback(() => setMenuOpen(false), []);
+
+  // Link sa hash-om (npr. /#sadrzaj): kada je sajt spreman, skok na sekciju sa
+  // istim razmakom ispod navbara kao i klik u meniju.
+  useEffect(() => {
+    if (!ready) return;
+    const id = decodeURIComponent(window.location.hash.slice(1));
+    if (NAV.some((item) => item.id === id)) navigate(id, { immediate: true });
+    // samo jednom, kada sajt postane spreman
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ready]);
+
+  // Rezervacija je tel: link. Na racunaru (bez touch ekrana) poziv uglavnom ne
+  // radi, pa [data-booking] linkovi tamo vode na kontakt sekciju sa brojem i email-om.
+  const navigateRef = useRef(navigate);
+  navigateRef.current = navigate;
+  useEffect(() => {
+    const onClick = (event) => {
+      const link = event.target.closest?.("a[data-booking]");
+      if (!link || window.matchMedia("(pointer: coarse)").matches) return;
+      event.preventDefault();
+      navigateRef.current("kontakt");
+    };
+    document.addEventListener("click", onClick);
+    return () => document.removeEventListener("click", onClick);
+  }, []);
   // Stabilna referenca - inace bi se Loader efekat (i animacija) restartovao na svaki render.
   const onLoaded = useCallback(() => setReady(true), []);
 
@@ -624,9 +668,10 @@ export default function App() {
       {/* Sajt se renderuje odmah, ispod loadera: tezak prvi render, ScrollTrigger-i
           i dekodiranje slika se tako zavrse dok je loader jos preko ekrana,
           umesto da se sudare sa intro animacijom. Animacije cekaju `ready`. */}
-      <Header ready={ready} menuOpen={menuOpen} setMenuOpen={setMenuOpen} />
+      <Header ready={ready} menuOpen={menuOpen} setMenuOpen={setMenuOpen} onNavigate={navigate} />
       <BrandMenu open={menuOpen} onClose={closeMenu} onNavigate={navigate} />
-      <main id="top">
+      {/* Dok je meni otvoren, sadrzaj iza panela nije dostupan tastaturom (Tab ostaje u meniju). */}
+      <main id="top" inert={menuOpen}>
         <Hero ready={ready} />
         <Intro />
         <Gallery onLightboxChange={setLightboxOpen} />
@@ -634,7 +679,7 @@ export default function App() {
         <Testimonials />
         <LocationContact />
       </main>
-      <Footer onNavigate={navigate} />
+      <Footer onNavigate={navigate} inert={menuOpen} />
     </>
   );
 }

@@ -49,7 +49,7 @@ export default function Amenities() {
           className="col-span-2 flex flex-wrap items-center justify-between gap-6 rounded-[1.5rem] bg-[#141414] p-5 text-[#e9e9e9] sm:rounded-[1.75rem] sm:p-6 md:col-span-1 md:flex-col md:flex-nowrap md:items-start"
         >
           <p className="font-melodrama text-[clamp(2rem,3vw,2.75rem)] leading-[0.95] tracking-[-0.03em]">Spremni za odmor?</p>
-          <PillLink href={getBookingHref()} tone="light" className="!pl-4 text-sm sm:!pl-5">
+          <PillLink href={getBookingHref()} data-booking tone="light" className="!pl-4 text-sm sm:!pl-5">
             Pozovi
           </PillLink>
         </li>
