@@ -123,7 +123,11 @@ export default function LocationContact() {
           </p>
 
           <PillLink href={getBookingHref()} tone="light" className="mt-8">
-            Rezerviši<span className="hidden min-[381px]:inline"> — {CONTACT.phone}</span>
+            {/* Jedan span: PillLink je flex sa gap-3, pa bi "Rezerviši" i broj kao dva
+                deteta dobili dodatni razmak izmedju sebe. */}
+            <span>
+              Rezerviši<span className="hidden min-[381px]:inline"> — {CONTACT.phone}</span>
+            </span>
           </PillLink>
 
           <ul className="mt-10 grid gap-2">
