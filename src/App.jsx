@@ -1,12 +1,16 @@
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import Lenis from "lenis";
 import roomImage from "./assets/room.webp";
+import Intro from "./sections/Intro";
 import Gallery from "./sections/Gallery";
+import Amenities from "./sections/Amenities";
 import Testimonials from "./sections/Testimonials";
 import LocationContact from "./sections/LocationContact";
 import Footer from "./sections/Footer";
+import { NAV } from "./data/site";
+import { getBookingHref } from "./lib/booking";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -33,10 +37,31 @@ function Loader({ onComplete }) {
 
     document.documentElement.classList.add("is-loading");
 
+    // Loader se podize tek kada su fontovi i hero slika spremni (dekodirani),
+    // da se ne bi dekodirali usred intro animacije. Zastita: najvise 3s.
+    const heroImage = document.querySelector(".hero-image img");
+    const assetsReady = Promise.race([
+      Promise.all([document.fonts?.ready, heroImage?.decode?.().catch(() => {})]),
+      new Promise((resolve) => setTimeout(resolve, 3000)),
+    ]);
+    let cancelled = false;
+    let exit;
+
     const timeline = gsap.timeline({
       onComplete: () => {
-        document.documentElement.classList.remove("is-loading");
-        onComplete();
+        assetsReady.then(() => {
+          if (cancelled) return;
+          exit = gsap.to(loader, {
+            yPercent: -100,
+            duration: reduceMotion ? 0.01 : 0.3,
+            delay: reduceMotion ? 0 : 0.05,
+            ease: "expo.inOut",
+            onComplete: () => {
+              document.documentElement.classList.remove("is-loading");
+              onComplete();
+            },
+          });
+        });
       },
     });
 
@@ -63,15 +88,11 @@ function Loader({ onComplete }) {
       },
       0,
     );
-    timeline.to(loader, {
-      yPercent: -100,
-      duration: reduceMotion ? 0.01 : 0.3,
-      delay: reduceMotion ? 0 : 0.05,
-      ease: "expo.inOut",
-    });
 
     return () => {
+      cancelled = true;
       timeline.kill();
+      exit?.kill();
       document.documentElement.classList.remove("is-loading");
     };
   }, [onComplete]);
@@ -112,21 +133,28 @@ function Cursor() {
     const cursor = cursorRef.current;
     const position = { x: window.innerWidth / 2, y: window.innerHeight / 2 };
     const target = { ...position };
-    let frame;
+    let frame = null;
 
     document.documentElement.classList.add("has-custom-cursor");
 
+    // Petlja radi samo dok kursor "dostize" mis; kad se smiri - staje.
     const render = () => {
-      position.x += (target.x - position.x) * 0.16;
-      position.y += (target.y - position.y) * 0.16;
+      const dx = target.x - position.x;
+      const dy = target.y - position.y;
+      position.x += dx * 0.16;
+      position.y += dy * 0.16;
       cursor.style.transform = `translate3d(${position.x}px, ${position.y}px, 0)`;
-      frame = requestAnimationFrame(render);
+      frame = Math.abs(dx) < 0.1 && Math.abs(dy) < 0.1 ? null : requestAnimationFrame(render);
+    };
+    const wake = () => {
+      if (frame === null) frame = requestAnimationFrame(render);
     };
 
     const onMove = (event) => {
       target.x = event.clientX;
       target.y = event.clientY;
       cursor.classList.remove("is-hidden");
+      wake();
     };
     const onLeave = () => cursor.classList.add("is-hidden");
     const onEnter = () => cursor.classList.remove("is-hidden");
@@ -134,11 +162,17 @@ function Cursor() {
     const onUp = () => cursor.classList.remove("is-active");
     const onOver = (event) => {
       if (event.target.closest("a, button")) cursor.classList.add("is-hovering");
+      if (event.target.closest('[data-cursor="drag"]')) cursor.classList.add("is-drag");
+      if (event.target.closest('[data-cursor="zoom"]')) cursor.classList.add("is-zoom");
     };
     const onOut = (event) => {
-      const target = event.target.closest("a, button");
       // pointerout okida i pri prelasku na dete elementa - to nije napuštanje
+      const target = event.target.closest("a, button");
       if (target && !target.contains(event.relatedTarget)) cursor.classList.remove("is-hovering");
+      const dragArea = event.target.closest('[data-cursor="drag"]');
+      if (dragArea && !dragArea.contains(event.relatedTarget)) cursor.classList.remove("is-drag");
+      const zoomArea = event.target.closest('[data-cursor="zoom"]');
+      if (zoomArea && !zoomArea.contains(event.relatedTarget)) cursor.classList.remove("is-zoom");
     };
 
     window.addEventListener("mousemove", onMove);
@@ -149,10 +183,10 @@ function Cursor() {
     window.addEventListener("mouseup", onUp);
     document.addEventListener("pointerover", onOver);
     document.addEventListener("pointerout", onOut);
-    frame = requestAnimationFrame(render);
+    wake();
 
     return () => {
-      cancelAnimationFrame(frame);
+      if (frame !== null) cancelAnimationFrame(frame);
       document.documentElement.classList.remove("has-custom-cursor");
       window.removeEventListener("mousemove", onMove);
       document.documentElement.removeEventListener("mouseleave", onLeave);
@@ -168,14 +202,45 @@ function Cursor() {
   return <div ref={cursorRef} className="custom-cursor is-hidden" aria-hidden="true" />;
 }
 
-function Header({ menuOpen, setMenuOpen }) {
+function Header({ ready, menuOpen, setMenuOpen }) {
   const headerRef = useRef(null);
+  const barRef = useRef(null);
+  // "Tamni" izgled headera prati meni: odmah pri otvaranju, a pri zatvaranju
+  // tek kada panel (≈0.95s animacija) ode sa vrha ekrana - inace bi se svetla
+  // pilula i taman tekst pojavili preko tamnog panela koji se jos povlaci.
+  const [onPanel, setOnPanel] = useState(menuOpen);
 
+  useEffect(() => {
+    if (menuOpen) {
+      setOnPanel(true);
+      return undefined;
+    }
+    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const timer = setTimeout(() => setOnPanel(false), reduceMotion ? 0 : 800);
+    return () => clearTimeout(timer);
+  }, [menuOpen]);
+
+  // Posle ~80px skrola header postaje pilula i ostaje stalno vidljiv.
+  useEffect(() => {
+    const header = headerRef.current;
+    const trigger = ScrollTrigger.create({
+      start: 0,
+      end: "max",
+      onUpdate: (self) => header.classList.toggle("is-scrolled", self.scroll() > 80),
+    });
+    return () => trigger.kill();
+  }, []);
+
+  // Header se renderuje ispod loadera, ali ulazi tek kada je sajt spreman.
   useLayoutEffect(() => {
     const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     const context = gsap.context(() => {
+      if (!ready) {
+        gsap.set(barRef.current.children, { y: -24, opacity: 0 });
+        return;
+      }
       gsap.fromTo(
-        headerRef.current.children,
+        barRef.current.children,
         { y: -24, opacity: 0 },
         {
           y: 0,
@@ -188,39 +253,46 @@ function Header({ menuOpen, setMenuOpen }) {
     }, headerRef);
 
     return () => context.revert();
-  }, []);
+  }, [ready]);
 
   return (
     <header
       ref={headerRef}
-      className={`site-header fixed inset-x-0 top-0 z-50 flex items-start justify-between px-5 py-4 transition-colors duration-300 sm:px-8 sm:py-6 lg:px-10 lg:py-7 ${menuOpen ? "text-[#e9e9e9]" : "text-[#141414]"}`}
+      className={`site-header fixed inset-x-0 top-0 z-50 px-2.5 pt-2.5 sm:px-4 sm:pt-4 lg:px-5 lg:pt-5 ${
+        onPanel ? "is-menu-open text-[#e9e9e9]" : "text-[#141414]"
+      }`}
     >
-      <a href="#top" className="text-[1.9rem] font-extrabold leading-none tracking-[-0.07em] sm:text-[2.25rem]" aria-label="win. početna">
-        win.
-      </a>
-      <button
-        type="button"
-        className={`menu-button relative h-6 w-9 sm:h-8 sm:w-11 ${menuOpen ? "is-open" : ""}`}
-        aria-label={menuOpen ? "Zatvori meni" : "Otvori meni"}
-        aria-expanded={menuOpen}
-        aria-controls="brand-menu"
-        onClick={() => setMenuOpen((open) => !open)}
-      >
-        <span />
-        <span />
-      </button>
+      <div ref={barRef} className="header-bar flex items-center justify-between">
+        <a href="#top" className="text-[1.9rem] font-extrabold leading-none tracking-[-0.07em] sm:text-[2.25rem]" aria-label="win. početna">
+          win.
+        </a>
+        <button
+          type="button"
+          className={`menu-button relative h-6 w-9 sm:h-8 sm:w-11 ${menuOpen ? "is-open" : ""}`}
+          aria-label={menuOpen ? "Zatvori meni" : "Otvori meni"}
+          aria-expanded={menuOpen}
+          aria-controls="brand-menu"
+          onClick={() => setMenuOpen((open) => !open)}
+        >
+          <span />
+          <span />
+          <span />
+        </button>
+      </div>
     </header>
   );
 }
 
-function BrandMenu({ open, onClose }) {
+function BrandMenu({ open, onClose, onNavigate }) {
   const panelRef = useRef(null);
   const brandRef = useRef(null);
+  const navRef = useRef(null);
   const hasOpened = useRef(false);
 
   useEffect(() => {
     const panel = panelRef.current;
     const brand = brandRef.current;
+    const navItems = navRef.current.children;
     const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     const themeColor = document.querySelector('meta[name="theme-color"]');
     const timeline = gsap.timeline();
@@ -250,6 +322,12 @@ function BrandMenu({ open, onClose }) {
           ease: "power4.out",
         },
         reduceMotion ? 0 : "-=0.25",
+      );
+      timeline.fromTo(
+        navItems,
+        { y: 24, opacity: 0 },
+        { y: 0, opacity: 1, duration: reduceMotion ? 0 : 0.5, stagger: reduceMotion ? 0 : 0.05, ease: "power3.out" },
+        reduceMotion ? 0 : "-=0.5",
       );
       timeline.call(() => brand.focus());
     } else {
@@ -287,18 +365,37 @@ function BrandMenu({ open, onClose }) {
     <aside
       ref={panelRef}
       id="brand-menu"
-      className="invisible fixed inset-0 z-40 flex items-end overflow-hidden bg-[#101010] px-5 pb-8 text-[#e9e9e9] sm:px-8 sm:pb-12 lg:px-10 lg:pb-14"
+      className="invisible fixed inset-0 z-40 flex flex-col justify-end overflow-hidden bg-[#101010] px-5 pb-8 text-[#e9e9e9] sm:px-8 sm:pb-12 lg:px-10 lg:pb-14"
       aria-hidden={!open}
       inert={!open}
     >
+      <nav aria-label="Glavni meni">
+        {/* Isti jezik kao "rezerviši." ispod: Melodrama, mala slova, tacka. */}
+        <ul ref={navRef} className="mb-[clamp(1.5rem,5vh,3.5rem)] flex flex-col gap-1 sm:flex-row sm:flex-wrap sm:gap-x-10 sm:gap-y-2">
+          {NAV.map((item) => (
+            <li key={item.id}>
+              <a
+                href={`#${item.id}`}
+                onClick={(event) => {
+                  event.preventDefault();
+                  onNavigate(item.id);
+                }}
+                className="font-melodrama inline-block text-[clamp(2.5rem,6vw,5rem)] leading-[1] tracking-[-0.04em] opacity-50 transition duration-300 hover:-translate-y-1 hover:opacity-100"
+              >
+                {item.label}.
+              </a>
+            </li>
+          ))}
+        </ul>
+      </nav>
       <div className="overflow-hidden">
         <a
           ref={brandRef}
-          href="tel:0611187040"
+          href={getBookingHref()}
           onClick={onClose}
           className="font-melodrama block pb-[0.12em] pr-[0.08em] pt-[0.16em] text-[clamp(5rem,16vw,18rem)] font-normal leading-[0.84] tracking-[-0.05em]"
         >
-          Rezerviši
+          rezerviši.
         </a>
       </div>
     </aside>
@@ -310,6 +407,19 @@ function Hero({ ready }) {
   const titleRef = useRef(null);
   const imageEntranceRef = useRef(null);
   const imageRef = useRef(null);
+
+  // Hero je renderovan ispod loadera: do `ready` drzimo naslov i sliku u
+  // pocetnom (skrivenom) stanju, da se ne vide pre intro animacije.
+  useLayoutEffect(() => {
+    if (ready) return undefined;
+    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (reduceMotion) return undefined;
+    const context = gsap.context(() => {
+      gsap.set(titleRef.current.querySelectorAll("[data-title-line]"), { opacity: 0 });
+      gsap.set(imageEntranceRef.current, { y: window.innerWidth <= 430 ? 150 : 200 });
+    }, stageRef);
+    return () => context.revert();
+  }, [ready]);
 
   useLayoutEffect(() => {
     if (!ready) return undefined;
@@ -356,6 +466,9 @@ function Hero({ ready }) {
         );
 
       if (!reduceMotion) {
+        // Isti izgled kao ranije (luk 300px -> puna sirina), ali preko clip-path:
+        // kontejner je uvek pune sirine, pa nema preracunavanja layout-a po frejmu.
+        const side = () => `${Math.max(0, (imageRef.current.offsetWidth - 300) / 2)}px`;
         gsap
           .timeline({
             scrollTrigger: {
@@ -369,17 +482,8 @@ function Hero({ ready }) {
           })
           .fromTo(
             imageRef.current,
-            {
-              width: 300,
-              borderTopLeftRadius: "500px",
-              borderTopRightRadius: "500px",
-            },
-            {
-              width: "100%",
-              borderTopLeftRadius: 0,
-              borderTopRightRadius: 0,
-              ease: "none",
-            },
+            { clipPath: () => `inset(0px ${side()} 0px ${side()} round 500px 500px 0px 0px)` },
+            { clipPath: "inset(0px 0px 0px 0px round 0px 0px 0px 0px)", ease: "none" },
             0,
           );
       }
@@ -414,40 +518,16 @@ function Hero({ ready }) {
         <div ref={imageEntranceRef} className="mt-[-150px] flex justify-center min-[431px]:mt-[-200px]">
           <div
             ref={imageRef}
-            className="hero-image relative h-[70svh] w-[300px] overflow-hidden bg-[#d7d7d7] will-change-[width,border-radius] min-[431px]:h-svh"
+            className="hero-image relative h-[70svh] w-full overflow-hidden bg-[#d7d7d7] will-change-[clip-path] min-[431px]:h-svh"
           >
             <img
               src={roomImage}
               alt="Moderan enterijer dnevne sobe i kuhinje"
+              fetchPriority="high"
+              decoding="async"
               className="absolute left-1/2 top-0 h-full w-screen max-w-none -translate-x-1/2 object-cover object-center"
             />
           </div>
-        </div>
-      </section>
-
-      <section
-        aria-labelledby="story-title"
-        className="flex min-h-svh flex-col bg-[#d8d4ca] px-5 py-[clamp(5rem,10vw,9rem)] text-[#141414] sm:px-8 lg:px-10"
-      >
-        <div className="flex items-center justify-between border-b border-[#141414]/30 pb-4 text-[0.7rem] font-bold uppercase tracking-[0.2em] sm:text-xs">
-          <p>O prostoru</p>
-          <p>( 01 )</p>
-        </div>
-
-        <h2
-          id="story-title"
-          className="font-melodrama mt-[clamp(4rem,9vw,8rem)] max-w-[11ch] text-[clamp(4.5rem,12vw,11rem)] font-normal leading-[0.78] tracking-[-0.045em]"
-        >
-          Prostor koji prati tvoj ritam.
-        </h2>
-
-        <div className="mt-auto grid gap-8 border-t border-[#141414]/30 pt-5 sm:grid-cols-2 lg:grid-cols-[1fr_0.65fr]">
-          <p className="max-w-xl text-[clamp(1.25rem,2.3vw,2rem)] font-semibold leading-tight tracking-[-0.035em]">
-            Mesto za sporija jutra, duže razgovore i sve ono između.
-          </p>
-          <p className="max-w-md text-sm leading-relaxed text-[#141414]/65 sm:justify-self-end sm:text-base">
-            Promišljeni detalji, mirne linije i dovoljno prostora da se svaki dan oseća kao kod kuće.
-          </p>
         </div>
       </section>
     </div>
@@ -490,6 +570,29 @@ export default function App() {
     else lenisRef.current.start();
   }, [lightboxOpen, menuOpen, ready]);
 
+  // Navigacija na sekciju. Iz menija: prvo zatvori meni (skida `menu-open`
+  // i overflow:hidden sa body-ja), pa tek onda skroluj iza panela koji se zatvara.
+  const navigate = useCallback(
+    (id) => {
+      const target = id === "top" ? 0 : document.getElementById(id);
+      if (target === null) return;
+      const scroll = () => {
+        if (lenisRef.current) lenisRef.current.scrollTo(target, { force: true, duration: 1.4 });
+        else if (target === 0) window.scrollTo(0, 0);
+        else target.scrollIntoView();
+      };
+      if (menuOpen) {
+        setMenuOpen(false);
+        setTimeout(scroll, 80);
+      } else scroll();
+    },
+    [menuOpen],
+  );
+
+  const closeMenu = useCallback(() => setMenuOpen(false), []);
+  // Stabilna referenca - inace bi se Loader efekat (i animacija) restartovao na svaki render.
+  const onLoaded = useCallback(() => setReady(true), []);
+
   useEffect(() => {
     document.body.classList.toggle("lightbox-open", lightboxOpen);
     return () => document.body.classList.remove("lightbox-open");
@@ -497,21 +600,22 @@ export default function App() {
 
   return (
     <>
-      {!ready && <Loader onComplete={() => setReady(true)} />}
+      {!ready && <Loader onComplete={onLoaded} />}
       <Cursor />
-      {ready && (
-        <>
-          <Header menuOpen={menuOpen} setMenuOpen={setMenuOpen} />
-          <BrandMenu open={menuOpen} onClose={() => setMenuOpen(false)} />
-          <main id="top">
-            <Hero ready={ready} />
-            <Gallery onLightboxChange={setLightboxOpen} />
-            <Testimonials />
-            <LocationContact />
-          </main>
-          <Footer />
-        </>
-      )}
+      {/* Sajt se renderuje odmah, ispod loadera: tezak prvi render, ScrollTrigger-i
+          i dekodiranje slika se tako zavrse dok je loader jos preko ekrana,
+          umesto da se sudare sa intro animacijom. Animacije cekaju `ready`. */}
+      <Header ready={ready} menuOpen={menuOpen} setMenuOpen={setMenuOpen} />
+      <BrandMenu open={menuOpen} onClose={closeMenu} onNavigate={navigate} />
+      <main id="top">
+        <Hero ready={ready} />
+        <Intro />
+        <Gallery onLightboxChange={setLightboxOpen} />
+        <Amenities />
+        <Testimonials />
+        <LocationContact />
+      </main>
+      <Footer onNavigate={navigate} />
     </>
   );
 }

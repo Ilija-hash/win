@@ -1,7 +1,9 @@
-import { useLayoutEffect, useMemo, useRef, useState } from "react";
-import gsap from "gsap";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { Chevron } from "../components/Icons";
+import { useEffect, useRef, useState } from "react";
 import Lightbox from "../components/Lightbox";
+import { SectionTitle } from "../components/Section";
+import { useReveal } from "../hooks/useReveal";
+import { ROOMS } from "../data/site";
 import manifest from "../assets/gallery/manifest.json";
 
 // Vite hesira i verzionise ove fajlove sam.
@@ -20,157 +22,188 @@ function indexByKey(modules) {
 const thumbMap = indexByKey(thumbs);
 const fullMap = indexByKey(fulls);
 
-// Folder "trepezarija" je zateceno ime; labela je ispravna.
-const ROOM_LABELS = {
-  dnevna: "Dnevna soba",
-  spavaca: "Spavaća soba",
-  kuhinja: "Kuhinja",
-  trepezarija: "Trpezarija",
-  kupatilo: "Kupatilo",
-  terasa: "Terasa",
-  hodnik: "Hodnik",
-  lift: "Lift",
-  zgrada: "Zgrada",
-};
+const allPhotos = manifest
+  .map((item) => {
+    const key = `${item.room}/${item.slug}`;
+    return { ...item, key, thumb: thumbMap[key], full: fullMap[key] };
+  })
+  .filter((item) => item.thumb && item.full);
 
-const ROOM_ORDER = ["dnevna", "spavaca", "kuhinja", "trepezarija", "kupatilo", "terasa", "hodnik", "lift", "zgrada"];
+// Svaka soba: cover prvi, pa ostale slike iz njenih foldera.
+const rooms = ROOMS.map((room) => {
+  const roomPhotos = allPhotos
+    .filter((photo) => room.folders.includes(photo.room))
+    .sort((a, b) => room.folders.indexOf(a.room) - room.folders.indexOf(b.room) || a.slug.localeCompare(b.slug))
+    .map((photo) => ({ ...photo, label: room.label }));
+  const cover = roomPhotos.find((photo) => photo.key === room.cover) ?? roomPhotos[0];
+  return { ...room, cover, photos: cover ? [cover, ...roomPhotos.filter((photo) => photo !== cover)] : [] };
+}).filter((room) => room.photos.length > 0);
 
-const photos = manifest
-  .map((item) => ({
-    ...item,
-    label: ROOM_LABELS[item.room] ?? item.room,
-    thumb: thumbMap[`${item.room}/${item.slug}`],
-    full: fullMap[`${item.room}/${item.slug}`],
-  }))
-  .filter((item) => item.thumb && item.full)
-  .sort((a, b) => ROOM_ORDER.indexOf(a.room) - ROOM_ORDER.indexOf(b.room) || a.slug.localeCompare(b.slug));
+// 1 fotografija, 2-4 fotografije, 5+ fotografija (11-14 uvek "fotografija").
+function photoCount(count) {
+  const lastTwo = count % 100;
+  const last = count % 10;
+  if (lastTwo >= 11 && lastTwo <= 14) return `${count} fotografija`;
+  if (last === 1) return `${count} fotografija`;
+  if (last >= 2 && last <= 4) return `${count} fotografije`;
+  return `${count} fotografija`;
+}
 
-const availableRooms = ROOM_ORDER.filter((room) => photos.some((photo) => photo.room === room));
+const DRAG_THRESHOLD = 5;
 
 export default function Gallery({ onLightboxChange }) {
-  const [activeRoom, setActiveRoom] = useState("all");
+  const [openRoom, setOpenRoom] = useState(null);
   const [lightboxIndex, setLightboxIndex] = useState(null);
-  const gridRef = useRef(null);
-  const headingRef = useRef(null);
+  const sectionRef = useRef(null);
+  const trackRef = useRef(null);
+  const drag = useRef({ active: false, moved: false, startX: 0, startScroll: 0 });
 
-  const visible = useMemo(
-    () => (activeRoom === "all" ? photos : photos.filter((photo) => photo.room === activeRoom)),
-    [activeRoom],
-  );
+  useReveal(sectionRef);
 
-  // Naslov ulazi na scroll
-  useLayoutEffect(() => {
-    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    if (reduceMotion) return undefined;
+  // Vucenje misem. Touch koristi nativni horizontalni skrol (+ snap).
+  useEffect(() => {
+    const track = trackRef.current;
 
-    const context = gsap.context(() => {
-      gsap.fromTo(
-        headingRef.current,
-        { y: 40, opacity: 0 },
-        {
-          y: 0,
-          opacity: 1,
-          duration: 0.9,
-          ease: "power3.out",
-          scrollTrigger: { trigger: headingRef.current, start: "top 85%" },
-        },
-      );
-    }, headingRef);
+    const onDown = (event) => {
+      if (event.pointerType !== "mouse" || event.button !== 0) return;
+      drag.current = { active: true, moved: false, startX: event.clientX, startScroll: track.scrollLeft };
+    };
+    const onMove = (event) => {
+      const state = drag.current;
+      if (!state.active) return;
+      const delta = event.clientX - state.startX;
+      if (!state.moved && Math.abs(delta) > DRAG_THRESHOLD) {
+        state.moved = true;
+        track.classList.add("is-dragging");
+      }
+      if (state.moved) track.scrollLeft = state.startScroll - delta;
+    };
+    const onUp = () => {
+      if (!drag.current.active) return;
+      drag.current.active = false;
+      track.classList.remove("is-dragging");
+    };
 
-    return () => context.revert();
+    track.addEventListener("pointerdown", onDown);
+    window.addEventListener("pointermove", onMove);
+    window.addEventListener("pointerup", onUp);
+    return () => {
+      track.removeEventListener("pointerdown", onDown);
+      window.removeEventListener("pointermove", onMove);
+      window.removeEventListener("pointerup", onUp);
+    };
   }, []);
 
-  // Stagger pri promeni filtera
-  useLayoutEffect(() => {
-    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    if (reduceMotion || !gridRef.current) return undefined;
+  // Klik posle vucenja ne sme da otvori sobu.
+  const onClickCapture = (event) => {
+    if (drag.current.moved) {
+      event.preventDefault();
+      event.stopPropagation();
+      drag.current.moved = false;
+    }
+  };
 
-    const context = gsap.context(() => {
-      gsap.fromTo(
-        gridRef.current.children,
-        { opacity: 0, y: 24 },
-        { opacity: 1, y: 0, duration: 0.5, stagger: 0.03, ease: "power2.out", onComplete: () => ScrollTrigger.refresh() },
-      );
-    }, gridRef);
+  const step = (direction) => {
+    const track = trackRef.current;
+    const card = track.firstElementChild;
+    const distance = card ? card.offsetWidth + 12 : track.clientWidth * 0.8;
+    track.scrollBy({ left: direction * distance, behavior: "smooth" });
+  };
 
-    return () => context.revert();
-  }, [activeRoom]);
-
-  const openLightbox = (photo) => {
-    const index = visible.indexOf(photo);
-    setLightboxIndex(index);
+  const open = (room) => {
+    setOpenRoom(room);
+    setLightboxIndex(0);
     onLightboxChange?.(true);
   };
 
-  const closeLightbox = () => {
+  const close = () => {
     setLightboxIndex(null);
+    setOpenRoom(null);
     onLightboxChange?.(false);
   };
 
   return (
     <section
+      ref={sectionRef}
       id="galerija"
       aria-labelledby="gallery-title"
-      className="flex flex-col bg-[#e9e9e9] px-5 py-[clamp(5rem,10vw,9rem)] text-[#141414] sm:px-8 lg:px-10"
+      className="overflow-hidden bg-[#e9e9e9] py-[clamp(5rem,10vw,9rem)] text-[#141414]"
     >
-      <div className="flex items-center justify-between border-b border-[#141414]/30 pb-4 text-[0.7rem] font-bold uppercase tracking-[0.2em] sm:text-xs">
-        <p>Galerija</p>
-        <p>( 02 )</p>
-      </div>
+      <div className="flex items-end justify-between gap-6 px-5 sm:px-8 lg:px-10">
+        <SectionTitle id="gallery-title">galerija.</SectionTitle>
 
-      <h2
-        ref={headingRef}
-        id="gallery-title"
-        className="font-melodrama mt-[clamp(3rem,7vw,6rem)] max-w-[12ch] text-[clamp(3.5rem,10vw,9rem)] font-normal leading-[0.82] tracking-[-0.045em]"
-      >
-        Pogledaj svaki ugao.
-      </h2>
-
-      <div className="mt-[clamp(2.5rem,5vw,4rem)] flex flex-wrap gap-2">
-        {["all", ...availableRooms].map((room) => {
-          const isActive = activeRoom === room;
-          return (
+        <div data-reveal className="mb-[1.2vw] hidden gap-2 sm:flex">
+          {[
+            { dir: -1, label: "Prethodne sobe", icon: "left" },
+            { dir: 1, label: "Sledeće sobe", icon: "right" },
+          ].map((control) => (
             <button
-              key={room}
+              key={control.dir}
               type="button"
-              onClick={() => setActiveRoom(room)}
-              aria-pressed={isActive}
-              className={`rounded-full border px-4 py-2 text-[0.7rem] font-bold uppercase tracking-[0.15em] transition-colors duration-200 sm:text-xs ${
-                isActive
-                  ? "border-[#141414] bg-[#141414] text-[#e9e9e9]"
-                  : "border-[#141414]/25 text-[#141414] hover:border-[#141414]/60"
-              }`}
+              onClick={() => step(control.dir)}
+              aria-label={control.label}
+              className="flex h-12 w-12 items-center justify-center rounded-full bg-[#141414] text-[#e9e9e9] transition-transform duration-300 hover:scale-105"
             >
-              {room === "all" ? "Sve" : ROOM_LABELS[room]}
+              <Chevron direction={control.icon} className="h-5 w-5" />
             </button>
-          );
-        })}
+          ))}
+        </div>
       </div>
 
-      <div ref={gridRef} className="mt-8 grid grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-3 lg:grid-cols-4">
-        {visible.map((photo) => (
-          <button
-            key={`${photo.room}/${photo.slug}`}
-            type="button"
-            onClick={() => openLightbox(photo)}
-            aria-label={`Otvori fotografiju - ${photo.label}`}
-            className="group relative aspect-[4/5] overflow-hidden bg-[#d7d7d7]"
-          >
-            <img
-              src={photo.thumb}
-              alt={photo.label}
-              loading="lazy"
-              decoding="async"
-              width={photo.w}
-              height={photo.h}
-              style={{ backgroundImage: `url(${photo.lqip})`, backgroundSize: "cover", backgroundPosition: "center" }}
-              className="h-full w-full object-cover transition-transform duration-500 ease-out group-hover:scale-[1.04]"
-            />
-          </button>
+      <ul
+        ref={trackRef}
+        data-reveal
+        data-cursor="drag"
+        onClickCapture={onClickCapture}
+        className="gallery-track mt-10 flex gap-3 overflow-x-auto px-5 pointer-coarse:snap-x pointer-coarse:snap-mandatory sm:mt-14 sm:px-8 lg:px-10"
+        aria-label="Sobe apartmana"
+      >
+        {rooms.map((room) => (
+          <li key={room.id} className="flex-none snap-start">
+            <button
+              type="button"
+              onClick={() => open(room)}
+              aria-label={`${room.label} - otvori ${photoCount(room.photos.length)}`}
+              className="group relative block h-[62svh] max-h-[640px] min-h-[380px] w-[78vw] overflow-hidden rounded-[1.5rem] bg-[#d7d7d7] text-left sm:w-[46vw] sm:rounded-[2rem] lg:w-[30vw]"
+            >
+              <img
+                src={room.cover.thumb}
+                alt={room.label}
+                loading="lazy"
+                decoding="async"
+                draggable="false"
+                width={room.cover.w}
+                height={room.cover.h}
+                style={{ backgroundImage: `url(${room.cover.lqip})`, backgroundSize: "cover", backgroundPosition: "center" }}
+                className="pointer-events-none absolute inset-0 h-full w-full select-none object-cover transition-transform duration-[900ms] ease-out group-hover:scale-[1.05]"
+              />
+              <span className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black/55 to-transparent" />
+              <span className="absolute inset-x-5 bottom-5 flex items-end justify-between gap-4 text-[#e9e9e9] sm:inset-x-6 sm:bottom-6">
+                <span>
+                  <span className="font-melodrama block text-[clamp(2.25rem,3.6vw,3.5rem)] leading-[0.95] tracking-[-0.03em]">
+                    {room.label}
+                  </span>
+                  <span className="mt-1 block text-sm font-semibold opacity-80">{photoCount(room.photos.length)}</span>
+                </span>
+                <span
+                  aria-hidden="true"
+                  className="flex h-11 w-11 flex-none items-center justify-center rounded-full bg-[#e9e9e9] text-[#141414] transition-transform duration-300 group-hover:translate-x-0.5"
+                >
+                  <Chevron className="h-4 w-4" />
+                </span>
+              </span>
+            </button>
+          </li>
         ))}
-      </div>
+      </ul>
 
-      <Lightbox photos={visible} index={lightboxIndex} onClose={closeLightbox} onNavigate={setLightboxIndex} />
+      <Lightbox
+        photos={openRoom?.photos ?? []}
+        title={openRoom?.label}
+        index={lightboxIndex}
+        onClose={close}
+        onNavigate={setLightboxIndex}
+      />
     </section>
   );
 }

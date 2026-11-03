@@ -1,44 +1,43 @@
+import { Chevron } from "../components/Icons";
 import { useRef } from "react";
 import { useDarkSection } from "../hooks/useDarkSection";
-import { CONTACT } from "./LocationContact";
+import { CONTACT, NAV } from "../data/site";
 
-export default function Footer() {
+export default function Footer({ onNavigate }) {
   const footerRef = useRef(null);
   useDarkSection(footerRef);
 
   return (
     <footer
       ref={footerRef}
-      className="flex flex-col bg-[#101014] px-5 pb-8 pt-[clamp(4rem,8vw,7rem)] text-[#e9e9e9] sm:px-8 sm:pb-10 lg:px-10"
+      className="surface-dark flex flex-col overflow-hidden bg-[#101010] px-5 pb-6 pt-[clamp(1rem,3vw,2rem)] text-[#e9e9e9] sm:px-8 sm:pb-8 lg:px-10"
     >
-      <div className="grid gap-10 border-b border-[#e9e9e9]/20 pb-10 sm:grid-cols-2">
-        <div>
-          <p className="text-[0.7rem] font-bold uppercase tracking-[0.2em] opacity-55 sm:text-xs">Apartman</p>
-          <a
-            href={CONTACT.phoneHref}
-            className="font-melodrama mt-4 block text-[clamp(3rem,9vw,7rem)] font-normal leading-[0.85] tracking-[-0.05em] transition-opacity hover:opacity-70"
-          >
-            Rezerviši
-          </a>
-        </div>
+      <div className="grid gap-10 sm:grid-cols-2">
+        <nav aria-label="Footer">
+          <ul className="flex flex-wrap gap-2">
+            {NAV.map((item) => (
+              <li key={item.id}>
+                <a
+                  href={`#${item.id}`}
+                  onClick={(event) => {
+                    event.preventDefault();
+                    onNavigate?.(item.id);
+                  }}
+                  className="inline-flex rounded-full border border-[#e9e9e9]/20 px-5 py-2.5 text-base font-semibold tracking-[-0.02em] transition-colors duration-300 hover:bg-[#e9e9e9] hover:text-[#101010]"
+                >
+                  {item.label}
+                </a>
+              </li>
+            ))}
+          </ul>
+        </nav>
 
-        <div className="grid gap-4 sm:justify-items-end sm:text-right">
+        <div className="grid content-start gap-2 sm:justify-items-end sm:text-right">
           <a href={CONTACT.phoneHref} className="text-lg font-semibold tracking-[-0.02em] transition-opacity hover:opacity-60">
             {CONTACT.phone}
           </a>
-          <a
-            href={`mailto:${CONTACT.email}`}
-            className="text-lg font-semibold tracking-[-0.02em] transition-opacity hover:opacity-60"
-          >
+          <a href={`mailto:${CONTACT.email}`} className="text-lg font-semibold tracking-[-0.02em] transition-opacity hover:opacity-60">
             {CONTACT.email}
-          </a>
-          <a
-            href={CONTACT.mapsLink}
-            target="_blank"
-            rel="noreferrer"
-            className="text-lg font-semibold tracking-[-0.02em] transition-opacity hover:opacity-60"
-          >
-            {CONTACT.address}
           </a>
           <a
             href={CONTACT.instagramHref}
@@ -51,11 +50,26 @@ export default function Footer() {
         </div>
       </div>
 
-      <div className="flex flex-col gap-3 pt-6 text-[0.7rem] font-bold uppercase tracking-[0.2em] opacity-55 sm:flex-row sm:items-center sm:justify-between sm:text-xs">
-        <p>win. — Sokobanja</p>
-        <p>&copy; {new Date().getFullYear()} Sva prava zadržana.</p>
-        <a href="#top" className="transition-opacity hover:opacity-100">
-          Nazad na vrh &#8593;
+      {/* Ogroman wordmark preko cele sirine, kao kod nueve. */}
+      <p
+        aria-hidden="true"
+        className="mt-[clamp(3rem,8vw,6rem)] select-none text-center text-[clamp(7rem,36vw,36rem)] font-extrabold leading-[0.78] tracking-[-0.08em]"
+      >
+        win.
+      </p>
+
+      <div className="mt-6 flex flex-col gap-3 text-[0.7rem] font-bold uppercase tracking-[0.2em] opacity-55 sm:flex-row sm:items-center sm:justify-between sm:text-xs">
+        <p>{CONTACT.address}</p>
+        <p>&copy; {new Date().getFullYear()} win. Sva prava zadržana.</p>
+        <a
+          href="#top"
+          onClick={(event) => {
+            event.preventDefault();
+            onNavigate?.("top");
+          }}
+          className="transition-opacity hover:opacity-100"
+        >
+          Nazad na vrh <Chevron direction="up" className="ml-1 inline h-3.5 w-3.5 align-[-0.15em]" />
         </a>
       </div>
     </footer>

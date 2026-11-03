@@ -45,7 +45,8 @@ body {
 }
 
 .loader-screen ::selection,
-#brand-menu ::selection {
+#brand-menu ::selection,
+.surface-dark ::selection {
   color: #141414;
   background: #e9e9e9;
 }
@@ -117,13 +118,85 @@ body.on-dark {
   transform: scale(0.24);
 }
 
+/* Nad sliderom: veci krug sa strelicama ‹ › koje blago "pulsiraju" u stranu. */
+.custom-cursor::after {
+  position: absolute;
+  top: -10px;
+  left: -24px;
+  width: 48px;
+  height: 20px;
+  content: "";
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 20' fill='none' stroke='%23e9e9e9' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M9 4 3 10l6 6M39 4l6 6-6 6'/%3E%3C/svg%3E")
+    center / contain no-repeat;
+  opacity: 0;
+  transform: scale(0.5);
+  transition: opacity 200ms ease, transform 300ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.custom-cursor.is-drag::before {
+  opacity: 1;
+  transform: scale(2.1);
+}
+
+.custom-cursor.is-drag::after {
+  opacity: 1;
+  transform: scale(1);
+  animation: cursor-drag-nudge 1.4s ease-in-out 300ms infinite;
+}
+
+/* Dok se vuce: krug se malo stisne, strelice se priblize. */
+.custom-cursor.is-drag.is-active::before {
+  transform: scale(1.8);
+}
+
+.custom-cursor.is-drag.is-active::after {
+  animation: none;
+  transform: scale(0.8);
+}
+
+.custom-cursor.is-hidden::after {
+  opacity: 0;
+}
+
+/* Nad slikom u lightbox-u: krug sa + (uvecaj) ili - (umanji). */
+.custom-cursor.is-zoom::before {
+  opacity: 1;
+  transform: scale(1.6);
+}
+
+.custom-cursor.is-zoom::after {
+  top: -10px;
+  left: -10px;
+  width: 20px;
+  height: 20px;
+  background: url("data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 20 20%27 fill=%27none%27 stroke=%27%23141414%27 stroke-width=%272%27 stroke-linecap=%27round%27%3E%3Cpath d=%27M10 4v12M4 10h12%27/%3E%3C/svg%3E") center / contain no-repeat;
+  opacity: 1;
+  transform: scale(1);
+  animation: none;
+}
+
+html.lightbox-zoomed .custom-cursor.is-zoom::after {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 20 20%27 fill=%27none%27 stroke=%27%23141414%27 stroke-width=%272%27 stroke-linecap=%27round%27%3E%3Cpath d=%27M4 10h12%27/%3E%3C/svg%3E");
+}
+
+@keyframes cursor-drag-nudge {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scaleX(1.18);
+  }
+}
+
 .custom-cursor.is-hidden::before {
   opacity: 0;
   transform: scale(0);
 }
 
+/* Burger sa 3 crte: gornja i donja se spajaju u X, srednja nestaje. */
 .menu-button {
-  --menu-line-gap: 5px;
+  --menu-line-gap: 6px;
 }
 
 .menu-button span {
@@ -141,20 +214,20 @@ body.on-dark {
   /* zatvaranje: prvo se odrotiraju, pa se razmaknu */
   transition: translate 280ms cubic-bezier(0.76, 0, 0.24, 1) 180ms,
     rotate 280ms cubic-bezier(0.76, 0, 0.24, 1),
-    scale 280ms cubic-bezier(0.76, 0, 0.24, 1);
+    scale 280ms cubic-bezier(0.76, 0, 0.24, 1), opacity 200ms ease 180ms;
 }
 
 .menu-button span:nth-child(1) {
   translate: 0 calc(-50% - var(--menu-line-gap));
 }
 
-.menu-button span:nth-child(2) {
+.menu-button span:nth-child(3) {
   translate: 0 calc(-50% + var(--menu-line-gap));
 }
 
 /* otvaranje: prvo se spoje, pa rotiraju */
 .menu-button.is-open span {
-  transition-delay: 0ms, 180ms, 180ms;
+  transition-delay: 0ms, 180ms, 180ms, 0ms;
 }
 
 .menu-button.is-open span:nth-child(1) {
@@ -164,6 +237,11 @@ body.on-dark {
 }
 
 .menu-button.is-open span:nth-child(2) {
+  opacity: 0;
+  scale: 0 1;
+}
+
+.menu-button.is-open span:nth-child(3) {
   translate: 0 -50%;
   rotate: -45deg;
   scale: 0.8 1;
@@ -173,30 +251,101 @@ body.on-dark {
   transform-origin: left bottom;
 }
 
+/* Pocetni luk (pre JS-a): kontejner je pune sirine, vidljivo je 300px u sredini. */
 .hero-image {
-  border-radius: 500px 500px 0 0;
+  clip-path: inset(0 calc(50% - 150px) 0 calc(50% - 150px) round 500px 500px 0 0);
 }
 
-/* Header je fiksiran preko sadržaja: posvetli samo kada je tamna sekcija
-   stvarno IZA trake headera (`header-dark`), a ne čim se pojavi u vidokrugu.
-   Zato je odvojen od `on-dark`, koji prati sredinu ekrana zbog kursora. */
-body.header-dark .site-header {
-  color: #e9e9e9;
+/* Header: proziran na vrhu (hero), posle skrola mutna zaobljena pilula.
+   Geometrija (padding) je UVEK ista, pa logo i hamburger nikad ne skacu.
+   Pozadina + blur zive na ::before i animira se samo njihov opacity -
+   animiranje backdrop-filter-a/padding-a je trepere pri otvaranju menija. */
+.site-header {
+  transition: color 300ms ease;
 }
 
-/* Google Maps je šaren i bije se sa paletom - obaramo ga na monohromatsko. */
+.header-bar {
+  position: relative;
+  isolation: isolate;
+  max-width: 100%;
+  margin-inline: auto;
+  padding: 0.85rem 1.25rem;
+  border-radius: 999px;
+  transition: max-width 650ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* Posle skrola pilula se suzava ka sredini. */
+.site-header.is-scrolled .header-bar {
+  max-width: calc(100% - 1.5rem);
+}
+
+.header-bar::before {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  content: "";
+  border-radius: inherit;
+  background: rgb(233 233 233 / 0.72);
+  box-shadow: 0 10px 30px rgb(20 20 20 / 0.08), inset 0 0 0 1px rgb(20 20 20 / 0.06);
+  -webkit-backdrop-filter: blur(16px) saturate(1.4);
+  backdrop-filter: blur(16px) saturate(1.4);
+  opacity: 0;
+  transition: opacity 400ms ease;
+  pointer-events: none;
+}
+
+.site-header.is-scrolled:not(.is-menu-open) .header-bar::before {
+  opacity: 1;
+}
+
+@media (min-width: 640px) {
+  .header-bar {
+    padding: 1.1rem 1.75rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .header-bar {
+    padding: 1.1rem 2rem;
+  }
+}
+
+@media (min-width: 768px) {
+  .site-header.is-scrolled .header-bar {
+    max-width: 36rem;
+  }
+}
+
+/* Slider galerije: bez vidljivog scrollbar-a, grab kursor kada nema custom kursora. */
+.gallery-track {
+  scrollbar-width: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.gallery-track::-webkit-scrollbar {
+  display: none;
+}
+
+html:not(.has-custom-cursor) .gallery-track {
+  cursor: grab;
+}
+
+html:not(.has-custom-cursor) .gallery-track.is-dragging {
+  cursor: grabbing;
+}
+
+.gallery-track.is-dragging button {
+  pointer-events: none;
+}
+
 .map-frame iframe {
-  filter: grayscale(1) contrast(1.05);
-  transition: filter 400ms ease;
-}
-
-.map-frame:hover iframe {
-  filter: grayscale(0.55) contrast(1);
+  border-radius: inherit;
 }
 
 @media (min-width: 640px) {
   .menu-button {
-    --menu-line-gap: 6px;
+    --menu-line-gap: 8px;
   }
 }
 
@@ -211,9 +360,33 @@ body.header-dark .site-header {
   }
 
   .hero-image {
-    width: 100% !important;
-    border-top-left-radius: 0 !important;
-    border-top-right-radius: 0 !important;
+    clip-path: none !important;
     transform: none !important;
   }
+}
+
+.lightbox-strip {
+  scrollbar-width: none;
+}
+
+.lightbox-strip::-webkit-scrollbar {
+  display: none;
+}
+
+/* Lightbox zoom */
+.lightbox-image {
+  transition: transform 450ms cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: transform;
+}
+
+html:not(.has-custom-cursor) [data-cursor="zoom"] {
+  cursor: zoom-in;
+}
+
+html.lightbox-zoomed:not(.has-custom-cursor) [data-cursor="zoom"] {
+  cursor: zoom-out;
+}
+
+.custom-cursor.is-hidden.is-zoom::after {
+  opacity: 0;
 }
