@@ -7,6 +7,9 @@ const DOUBLE_TAP_MS = 300;
 
 const clamp = (value) => Math.min(100, Math.max(0, value));
 
+// Telefon/tablet dobijaju 1200px, veci ekrani 1600px (zoom ostaje ostar).
+const largeSrcSet = (photo) => (photo.mid ? `${photo.mid} 1200w, ${photo.full} 1600w` : undefined);
+
 export default function Lightbox({ photos, title, index, onClose, onNavigate }) {
   const panelRef = useRef(null);
   const figureRef = useRef(null);
@@ -104,6 +107,19 @@ export default function Lightbox({ photos, title, index, onClose, onNavigate }) 
     );
     return () => tween.kill();
   }, [index, open]);
+
+  // Sledeca i prethodna slika se skidaju unapred - prelaz strelicom/swipe-om je bez cekanja.
+  useEffect(() => {
+    if (!open || photos.length < 2) return;
+    [index + 1, index - 1].forEach((neighbour) => {
+      const item = photos[(neighbour + photos.length) % photos.length];
+      const image = new Image();
+      image.sizes = "100vw";
+      const srcSet = largeSrcSet(item);
+      if (srcSet) image.srcset = srcSet;
+      image.src = item.full;
+    });
+  }, [index, open, photos]);
 
   // Aktivna mala slika uvek ostaje vidljiva u traci.
   useEffect(() => {
@@ -234,6 +250,8 @@ export default function Lightbox({ photos, title, index, onClose, onNavigate }) 
           <img
             ref={imageRef}
             src={photo.full}
+            srcSet={largeSrcSet(photo)}
+            sizes="100vw"
             alt={`${photo.label} - fotografija ${index + 1}`}
             draggable="false"
             className="lightbox-image h-full w-full select-none object-contain"

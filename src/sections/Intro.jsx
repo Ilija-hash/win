@@ -5,6 +5,7 @@ import { useReveal } from "../hooks/useReveal";
 import { getBookingHref } from "../lib/booking";
 import terraceImage from "../assets/gallery/terasa/20240412_163603-1600.webp";
 import terraceImage800 from "../assets/gallery/terasa/20240412_163603-800.webp";
+import terraceImage1200 from "../assets/gallery/terasa/20240412_163603-1200.webp";
 
 export default function Intro() {
   const sectionRef = useRef(null);
@@ -60,11 +61,11 @@ export default function Intro() {
           </div>
         </div>
 
-        <div data-reveal className="relative aspect-[4/5] overflow-hidden rounded-[1.5rem] bg-[#d7d7d7] sm:rounded-[2rem]">
+        <div data-reveal className="relative aspect-[4/5] overflow-hidden rounded-[1.5rem] bg-[#d7d7d7] sm:aspect-[4/3] sm:rounded-[2rem] lg:aspect-[4/5] short:aspect-[16/9]">
           <img
             ref={imageRef}
             src={terraceImage800}
-            srcSet={`${terraceImage800} 800w, ${terraceImage} 1600w`}
+            srcSet={`${terraceImage800} 800w, ${terraceImage1200} 1200w, ${terraceImage} 1600w`}
             sizes="(min-width: 1024px) 45vw, 100vw"
             alt="Terasa apartmana Win u Sokobanji"
             loading="lazy"

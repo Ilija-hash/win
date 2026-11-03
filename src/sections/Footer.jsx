@@ -1,29 +1,38 @@
-import { Chevron } from "../components/Icons";
 import { useRef } from "react";
+import { Chevron } from "../components/Icons";
 import { useDarkSection } from "../hooks/useDarkSection";
 import { CONTACT, NAV } from "../data/site";
 
+// Footer je nastavak tamne kontakt sekcije - bez ponavljanja kontakata (vec su iznad).
 export default function Footer({ onNavigate }) {
   const footerRef = useRef(null);
   useDarkSection(footerRef);
 
+  const go = (id) => (event) => {
+    event.preventDefault();
+    onNavigate?.(id);
+  };
+
   return (
-    <footer
-      ref={footerRef}
-      className="surface-dark flex flex-col overflow-hidden bg-[#101010] page-x pb-6 pt-[clamp(1rem,3vw,2rem)] text-[#e9e9e9] sm:pb-8"
-    >
-      <div className="grid gap-10 sm:grid-cols-2">
-        <nav aria-label="Footer">
-          <ul className="flex flex-wrap gap-2">
+    <footer ref={footerRef} className="surface-dark bg-[#101010] page-x pb-[clamp(1.5rem,3vw,2.5rem)] text-[#e9e9e9]">
+      <div className="flex flex-wrap items-center justify-between gap-x-8 gap-y-5 border-t border-[#e9e9e9]/10 pt-6 sm:pt-8">
+        <a
+          href="#top"
+          onClick={go("top")}
+          aria-label="win. - nazad na vrh"
+          className="text-[1.9rem] font-extrabold leading-none tracking-[-0.07em] sm:text-[2.25rem]"
+        >
+          win.
+        </a>
+
+        <nav aria-label="Footer" className="order-last w-full md:order-none md:w-auto">
+          <ul className="-my-2 flex flex-wrap gap-x-5 sm:gap-x-7">
             {NAV.map((item) => (
               <li key={item.id}>
                 <a
                   href={`#${item.id}`}
-                  onClick={(event) => {
-                    event.preventDefault();
-                    onNavigate?.(item.id);
-                  }}
-                  className="inline-flex rounded-full border border-[#e9e9e9]/20 px-4 py-2 text-sm sm:px-5 sm:py-2.5 sm:text-base font-semibold tracking-[-0.02em] transition-colors duration-300 hover:bg-[#e9e9e9] hover:text-[#101010]"
+                  onClick={go(item.id)}
+                  className="inline-block py-2 text-base font-semibold tracking-[-0.02em] opacity-60 transition-opacity duration-300 hover:opacity-100"
                 >
                   {item.label}
                 </a>
@@ -32,45 +41,21 @@ export default function Footer({ onNavigate }) {
           </ul>
         </nav>
 
-        <div className="grid content-start gap-2 sm:justify-items-end sm:text-right">
-          <a href={CONTACT.phoneHref} className="text-lg font-semibold tracking-[-0.02em] transition-opacity hover:opacity-60">
-            {CONTACT.phone}
-          </a>
-          <a href={`mailto:${CONTACT.email}`} className="text-lg font-semibold tracking-[-0.02em] transition-opacity hover:opacity-60">
-            {CONTACT.email}
-          </a>
-          <a
-            href={CONTACT.instagramHref}
-            target="_blank"
-            rel="noreferrer"
-            className="text-lg font-semibold tracking-[-0.02em] transition-opacity hover:opacity-60"
-          >
-            {CONTACT.instagram}
-          </a>
-        </div>
-      </div>
-
-      {/* Ogroman wordmark preko cele sirine, kao kod nueve. */}
-      <p
-        aria-hidden="true"
-        className="mt-[clamp(3rem,8vw,6rem)] select-none text-center text-[clamp(7rem,36vw,36rem)] font-extrabold leading-[0.78] tracking-[-0.08em]"
-      >
-        win.
-      </p>
-
-      <div className="mt-6 flex flex-col gap-3 text-[0.7rem] font-bold uppercase tracking-[0.2em] opacity-55 sm:flex-row sm:items-center sm:justify-between sm:text-xs">
-        <p>{CONTACT.address}</p>
-        <p>&copy; {new Date().getFullYear()} win. Sva prava zadržana.</p>
         <a
           href="#top"
-          onClick={(event) => {
-            event.preventDefault();
-            onNavigate?.("top");
-          }}
-          className="transition-opacity hover:opacity-100"
+          onClick={go("top")}
+          aria-label="Nazad na vrh"
+          className="flex h-11 w-11 flex-none items-center justify-center rounded-full bg-white/10 transition-colors duration-300 hover:bg-white/20"
         >
-          Nazad na vrh <Chevron direction="up" className="ml-1 inline h-3.5 w-3.5 align-[-0.15em]" />
+          <Chevron direction="up" className="h-5 w-5" />
         </a>
+      </div>
+
+      <div className="mt-6 flex flex-col gap-1 border-t border-[#e9e9e9]/10 pt-5 text-xs font-semibold text-[#e9e9e9]/50 sm:flex-row sm:items-center sm:justify-between">
+        <a href={CONTACT.mapsLink} target="_blank" rel="noreferrer" className="transition-colors duration-300 hover:text-[#e9e9e9]">
+          {CONTACT.address}
+        </a>
+        <p>&copy; {new Date().getFullYear()} win. Sva prava zadržana.</p>
       </div>
     </footer>
   );

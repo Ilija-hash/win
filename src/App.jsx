@@ -2,9 +2,13 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import Lenis from "lenis";
-import roomImage from "./assets/room.webp";
-import roomImage800 from "./assets/room-800.webp";
-import roomImage1200 from "./assets/room-1200.webp";
+// Hero: uspravne za telefon, siroki isecak (16:10) za desktop - vidi scripts/optimize-hero.mjs.
+import hero800 from "./assets/hero-800.webp";
+import hero1200 from "./assets/hero-1200.webp";
+import hero1600 from "./assets/hero-1600.webp";
+import heroWide1600 from "./assets/hero-wide-1600.webp";
+import heroWide2400 from "./assets/hero-wide-2400.webp";
+import heroWide3060 from "./assets/hero-wide-3060.webp";
 import Intro from "./sections/Intro";
 import Gallery from "./sections/Gallery";
 import Amenities from "./sections/Amenities";
@@ -504,7 +508,7 @@ function Hero({ ready }) {
           <div className="overflow-hidden">
             <h1
               data-title-line
-              className="origin-bottom text-[38px] font-black leading-[1.4] tracking-[-0.05em] text-[#141414] max-[390px]:text-[34px] min-[431px]:text-[70px] min-[768px]:text-[80px] min-[992px]:text-[100px]"
+              className="origin-bottom text-[38px] font-black leading-[1.4] tracking-[-0.05em] text-[#141414] max-[390px]:text-[34px] min-[431px]:text-[70px] min-[768px]:text-[80px] min-[992px]:text-[100px] short:!text-[48px]"
             >
               nigde nije kao kod
             </h1>
@@ -512,27 +516,36 @@ function Hero({ ready }) {
           <div className="overflow-hidden px-[0.08em] pb-[0.08em]">
             <p
               data-title-line
-              className="font-melodrama origin-bottom text-[120px] font-light italic leading-none tracking-[-0.045em] text-[#141414] max-[390px]:text-[110px] min-[431px]:text-[140px] min-[992px]:text-[180px]"
+              className="font-melodrama origin-bottom text-[120px] font-light italic leading-none tracking-[-0.045em] text-[#141414] max-[390px]:text-[110px] min-[431px]:text-[140px] min-[992px]:text-[180px] short:!text-[100px]"
             >
               kuće?
             </p>
           </div>
         </div>
 
-        <div ref={imageEntranceRef} className="mt-[-150px] flex justify-center min-[431px]:mt-[-200px]">
+        <div ref={imageEntranceRef} className="hero-arch flex justify-center">
           <div
             ref={imageRef}
             className="hero-image relative h-[70svh] w-full overflow-hidden bg-[#d7d7d7] will-change-[clip-path] min-[431px]:h-svh"
           >
-            <img
-              src={roomImage}
-              srcSet={`${roomImage800} 800w, ${roomImage1200} 1200w, ${roomImage} 1600w`}
-              sizes="(max-aspect-ratio: 3/4) 75vh, 100vw"
-              alt="Dnevna soba i kuhinja apartmana Win"
-              fetchPriority="high"
-              decoding="async"
-              className="absolute left-1/2 top-0 h-full w-screen max-w-none -translate-x-1/2 object-cover object-center"
-            />
+            {/* Siroki ekran dobija siroki isecak - uspravna slika bi se tu razvukla i bila mutna.
+                160vh: kada je ekran uzi od 16:10, slika se skalira po visini (cover). */}
+            <picture>
+              <source
+                media="(min-aspect-ratio: 1/1)"
+                srcSet={`${heroWide1600} 1600w, ${heroWide2400} 2400w, ${heroWide3060} 3060w`}
+                sizes="(max-aspect-ratio: 16/10) 160vh, 100vw"
+              />
+              <img
+                src={hero1600}
+                srcSet={`${hero800} 800w, ${hero1200} 1200w, ${hero1600} 1600w`}
+                sizes="(max-aspect-ratio: 3/4) 75vh, 100vw"
+                alt="Dnevna soba i kuhinja apartmana Win"
+                fetchPriority="high"
+                decoding="async"
+                className="absolute left-1/2 top-0 h-full w-screen max-w-none -translate-x-1/2 object-cover object-center"
+              />
+            </picture>
           </div>
         </div>
       </section>

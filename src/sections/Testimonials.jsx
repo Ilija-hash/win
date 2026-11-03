@@ -46,7 +46,7 @@ export default function Testimonials() {
     >
       <SectionTitle id="testimonials-title">utisci.</SectionTitle>
 
-      <div data-reveal className="mt-[clamp(2.5rem,6vw,4.5rem)] rounded-[1.75rem] bg-[#ece9e2] p-6 sm:rounded-[2.5rem] sm:p-10 lg:p-14">
+      <div data-reveal className="mt-[clamp(2.5rem,6vw,4.5rem)] rounded-[1.5rem] bg-[#ece9e2] p-6 sm:rounded-[2rem] sm:p-10 lg:p-14 short:p-6">
         {/* Svi citati su slozeni u istu celiju, pa visina ne skace pri promeni. */}
         <div ref={quotesRef} className="grid">
           {testimonials.map((item, index) => {
@@ -66,7 +66,7 @@ export default function Testimonials() {
                 >
                   <path d="M0 36V22.6C0 9.9 6.9 2.3 19 0l2.2 5.2C14.3 7.4 10.9 11.7 10.5 18H20v18H0Zm27 0V22.6C27 9.9 33.9 2.3 46 0l2 5.2c-6.9 2.2-10.3 6.5-10.7 12.8H47v18H27Z" />
                 </svg>
-                <blockquote className="font-melodrama max-w-[28ch] text-[clamp(1.65rem,4.6vw,4.25rem)] leading-[1] tracking-[-0.035em]">
+                <blockquote className="font-melodrama max-w-[28ch] text-[clamp(1.65rem,4.6vw,4.25rem)] leading-[1] tracking-[-0.035em] short:text-[1.6rem]">
                   {item.text}
                 </blockquote>
                 <figcaption className="mt-8 flex items-center gap-3">
@@ -86,7 +86,7 @@ export default function Testimonials() {
         {hasMany && (
           <div className="mt-10 flex items-center justify-between gap-6">
             {/* Vidljiva tackica je mala, ali dugme oko nje ima ~26px za prst. */}
-            <div className="-ml-2 flex">
+            <div className="-ml-2.5 flex">
               {testimonials.map((item, index) => (
                 <button
                   key={`${index}-${item.name}-dot`}
@@ -94,7 +94,7 @@ export default function Testimonials() {
                   onClick={() => setActive(index)}
                   aria-label={`Utisak ${index + 1} od ${testimonials.length}`}
                   aria-current={index === active}
-                  className="group p-2"
+                  className="group p-2.5"
                 >
                   <span
                     className={`block h-2.5 rounded-full transition-[width,background-color] duration-500 ${

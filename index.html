@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="sr">
+<html lang="sr-Latn">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -14,7 +14,43 @@
       type="font/woff2"
       crossorigin
     />
-    <title>win. — apartman u Sokobanji</title>
+    <title>ApartmanWin</title>
+
+    <!-- Pregled linka (Viber, WhatsApp, Facebook...).
+         Kada sajt dobije domen: zameni "/og-image.jpg" punim URL-om
+         (npr. https://win-sokobanja.rs/og-image.jpg) i otkomentarisi og:url. -->
+    <meta property="og:type" content="website" />
+    <meta property="og:locale" content="sr_RS" />
+    <meta property="og:site_name" content="win." />
+    <meta property="og:title" content="win. — apartman u Sokobanji" />
+    <meta property="og:description" content="Udoban, potpuno opremljen stan u mirnom delu Sokobanje, 500 m od centra, blizu parka Banjica." />
+    <meta property="og:image" content="/og-image.jpg" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="Dnevna soba apartmana Win" />
+    <!-- <meta property="og:url" content="https://DOMEN/" /> -->
+    <meta name="twitter:card" content="summary_large_image" />
+
+    <!-- Podaci o smestaju za Google (adresa, telefon, kontakt). -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "LodgingBusiness",
+        "name": "Apartman Win",
+        "description": "Udoban, potpuno opremljen stan u mirnom delu Sokobanje, 500 m od centra, blizu parka Banjica i hotela Sunce.",
+        "image": "/og-image.jpg",
+        "telephone": "+381611187040",
+        "email": "win.sokobanja@gmail.com",
+        "address": {
+          "@type": "PostalAddress",
+          "streetAddress": "Prevalac 9",
+          "addressLocality": "Sokobanja",
+          "postalCode": "18230",
+          "addressCountry": "RS"
+        },
+        "sameAs": ["https://instagram.com/win_sokobanja"]
+      }
+    </script>
   </head>
   <body>
     <div id="root"></div>

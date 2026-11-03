@@ -22,7 +22,7 @@ const SRC_DIR = path.join(ROOT, "gallery");
 const OUT_DIR = path.join(ROOT, "src", "assets", "gallery");
 const MANIFEST = path.join(OUT_DIR, "manifest.json");
 
-const SIZES = [800, 1600];
+const SIZES = [800, 1200, 1600];
 const QUALITY = 78;
 const LQIP_WIDTH = 16;
 

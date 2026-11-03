@@ -221,6 +221,13 @@ html.lightbox-zoomed .custom-cursor.is-zoom::after {
   --menu-line-gap: 5px;
 }
 
+/* Nevidljiva veca zona za prst (~48x44) - izgled ikonice ostaje isti. */
+.menu-button::before {
+  position: absolute;
+  inset: -10px -6px;
+  content: "";
+}
+
 .menu-button span {
   position: absolute;
   top: 50%;
@@ -271,6 +278,41 @@ html.lightbox-zoomed .custom-cursor.is-zoom::after {
 /* Pocetni luk (pre JS-a): kontejner je pune sirine, vidljivo je 300px u sredini. */
 .hero-image {
   clip-path: inset(0 calc(50% - 150px) 0 calc(50% - 150px) round 500px 500px 0 0);
+}
+
+/* Luk ulazi preko naslova najvise --hero-overlap (150/200px), ali na niskim
+   ekranima (laptop 1280x650, telefon polozen) samo onoliko koliko ima mesta
+   ispod naslova - da nikad ne prekrije "kuće?". --hero-title-h je visina
+   bloka naslova po breakpointu (prati velicine fonta u Hero komponenti). */
+.hero-arch {
+  --hero-overlap: 150px;
+  --hero-title-h: 175px;
+  margin-top: calc(-1 * clamp(0px, (100svh - var(--hero-title-h)) / 2 - 1.5rem, var(--hero-overlap)));
+}
+
+@media (min-width: 431px) {
+  .hero-arch {
+    --hero-overlap: 200px;
+    --hero-title-h: 240px;
+  }
+}
+
+@media (min-width: 768px) {
+  .hero-arch {
+    --hero-title-h: 255px;
+  }
+}
+
+@media (min-width: 992px) {
+  .hero-arch {
+    --hero-title-h: 320px;
+  }
+}
+
+@media (max-height: 520px) {
+  .hero-arch {
+    --hero-title-h: 170px;
+  }
 }
 
 /* Header: proziran na vrhu (hero), posle skrola mutna zaobljena pilula.
@@ -354,6 +396,15 @@ html:not(.has-custom-cursor) .gallery-row.is-dragging {
 
 .gallery-row.is-dragging button {
   pointer-events: none;
+}
+
+/* Cover slika se pojavljuje tek kada je ucitana - do tada se vidi LQIP pozadina kartice. */
+.gallery-card-image {
+  opacity: 0;
+}
+
+.gallery-card-image.is-loaded {
+  opacity: 1;
 }
 
 .map-frame iframe {

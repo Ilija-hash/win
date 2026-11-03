@@ -8,6 +8,7 @@ import manifest from "../assets/gallery/manifest.json";
 
 // Vite hesira i verzionise ove fajlove sam.
 const thumbs = import.meta.glob("../assets/gallery/*/*-800.webp", { eager: true, import: "default" });
+const mids = import.meta.glob("../assets/gallery/*/*-1200.webp", { eager: true, import: "default" });
 const fulls = import.meta.glob("../assets/gallery/*/*-1600.webp", { eager: true, import: "default" });
 
 function indexByKey(modules) {
@@ -20,12 +21,13 @@ function indexByKey(modules) {
 }
 
 const thumbMap = indexByKey(thumbs);
+const midMap = indexByKey(mids);
 const fullMap = indexByKey(fulls);
 
 const allPhotos = manifest
   .map((item) => {
     const key = `${item.room}/${item.slug}`;
-    return { ...item, key, thumb: thumbMap[key], full: fullMap[key] };
+    return { ...item, key, thumb: thumbMap[key], mid: midMap[key] ?? fullMap[key], full: fullMap[key] };
   })
   .filter((item) => item.thumb && item.full);
 
@@ -50,6 +52,30 @@ function photoCount(count) {
 
 const DRAG_THRESHOLD = 5;
 
+// srcset sa sve tri velicine - browser bira najmanju dovoljnu (telefon 3x -> 1200, ne 1600).
+const photoSrcSet = (photo) => `${photo.thumb} 800w, ${photo.mid} 1200w, ${photo.full} 1600w`;
+
+const CARD_SIZES = "(min-width: 1024px) 28vw, (min-width: 768px) 36vw, (min-width: 640px) 42vw, 72vw";
+
+// Unapred skidanje prvih slika sobe (hover / dodir kartice), pa se slider otvara sa vec ucitanom slikom.
+const preloaded = new Set();
+function preloadRoom(room) {
+  if (preloaded.has(room.id)) return;
+  preloaded.add(room.id);
+  room.photos.slice(0, 2).forEach((photo) => {
+    const image = new Image();
+    image.sizes = "100vw";
+    image.srcset = `${photo.mid} 1200w, ${photo.full} 1600w`;
+    image.src = photo.full;
+  });
+}
+
+// Slika postaje vidljiva tek kada je ucitana (ispod je LQIP), bez naglog "pop"-a.
+const markLoaded = (image) => image.classList.add("is-loaded");
+const watchLoaded = (image) => {
+  if (image?.complete && image.naturalWidth) markLoaded(image);
+};
+
 const CONTROLS = [
   { dir: -1, label: "Prethodne sobe", icon: "left", edge: "atStart" },
   { dir: 1, label: "Sledeće sobe", icon: "right", edge: "atEnd" },
@@ -59,11 +85,33 @@ export default function Gallery({ onLightboxChange }) {
   const [openRoom, setOpenRoom] = useState(null);
   const [lightboxIndex, setLightboxIndex] = useState(null);
   const [edges, setEdges] = useState({ atStart: true, atEnd: false });
+  const [nearby, setNearby] = useState(false);
   const sectionRef = useRef(null);
   const rowRef = useRef(null);
   const drag = useRef({ active: false, moved: false, startX: 0, startScroll: 0 });
 
   useReveal(sectionRef);
+
+  // Umesto loading="lazy" (koji u horizontalnom redu krece tek kada je kartica skoro vidljiva):
+  // kada je galerija ~1200px daleko, SVE kartice krecu da se skidaju odjednom.
+  useEffect(() => {
+    const section = sectionRef.current;
+    if (!section || !("IntersectionObserver" in window)) {
+      setNearby(true);
+      return undefined;
+    }
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((entry) => entry.isIntersecting)) {
+          setNearby(true);
+          observer.disconnect();
+        }
+      },
+      { rootMargin: "1200px 0px" },
+    );
+    observer.observe(section);
+    return () => observer.disconnect();
+  }, []);
 
   // Strelice se gase na krajevima reda (state se menja samo kada se kraj promeni).
   const updateEdges = useCallback(() => {
@@ -147,7 +195,7 @@ export default function Gallery({ onLightboxChange }) {
       ref={sectionRef}
       id="galerija"
       aria-labelledby="gallery-title"
-      className="overflow-hidden bg-[#e9e9e9] py-[clamp(5rem,10vw,9rem)] text-[#141414]"
+      className="overflow-hidden bg-[#e9e9e9] pb-[clamp(5rem,10vw,9rem)] pt-[clamp(2rem,5vw,4rem)] text-[#141414]"
     >
       <div className="flex items-end justify-between gap-6 page-x">
         <SectionTitle id="gallery-title">galerija.</SectionTitle>
@@ -175,28 +223,33 @@ export default function Gallery({ onLightboxChange }) {
         onScroll={updateEdges}
         onClickCapture={onClickCapture}
         aria-label="Sobe apartmana"
-        className="gallery-row mt-[clamp(2.5rem,5vw,4rem)] flex gap-3 overflow-x-auto page-x pointer-coarse:snap-x pointer-coarse:snap-mandatory sm:gap-4"
+        className="gallery-row mt-[clamp(2.5rem,6vw,4.5rem)] flex gap-3 overflow-x-auto page-x pointer-coarse:snap-x pointer-coarse:snap-mandatory sm:gap-4"
       >
         {rooms.map((room) => (
           <li key={room.id} className="w-[72vw] flex-none snap-start sm:w-[42vw] md:w-[36vw] lg:w-[28vw]">
             <button
               type="button"
               onClick={() => open(room)}
+              onPointerEnter={() => preloadRoom(room)}
+              onTouchStart={() => preloadRoom(room)}
+              onFocus={() => preloadRoom(room)}
               aria-label={`${room.label} - otvori ${photoCount(room.photos.length)}`}
-              className="group relative block aspect-[4/5] max-h-[70svh] min-h-[260px] w-full overflow-hidden rounded-[1.25rem] bg-[#d7d7d7] sm:rounded-[1.75rem]"
+              className="group relative block aspect-[4/5] max-h-[70svh] min-h-[260px] w-full overflow-hidden rounded-[1.5rem] bg-[#d7d7d7] sm:rounded-[1.75rem]"
+              style={{ backgroundImage: `url(${room.cover.lqip})`, backgroundSize: "cover", backgroundPosition: "center" }}
             >
               <img
-                src={room.cover.thumb}
-                srcSet={`${room.cover.thumb} 800w, ${room.cover.full} 1600w`}
-                sizes="(min-width: 1024px) 28vw, (min-width: 768px) 36vw, (min-width: 640px) 42vw, 72vw"
+                ref={watchLoaded}
+                src={nearby ? room.cover.thumb : undefined}
+                srcSet={nearby ? photoSrcSet(room.cover) : undefined}
+                sizes={CARD_SIZES}
                 alt={room.label}
-                loading="lazy"
+                fetchPriority="low"
                 decoding="async"
+                onLoad={(event) => markLoaded(event.currentTarget)}
                 draggable="false"
                 width={room.cover.w}
                 height={room.cover.h}
-                style={{ backgroundImage: `url(${room.cover.lqip})`, backgroundSize: "cover", backgroundPosition: "center" }}
-                className="pointer-events-none absolute inset-0 h-full w-full select-none object-cover transition-transform duration-[900ms] ease-out group-hover:scale-[1.04]"
+                className="gallery-card-image pointer-events-none absolute inset-0 h-full w-full select-none object-cover transition-[transform,opacity] duration-[900ms] ease-out group-hover:scale-[1.04]"
               />
               <span className="absolute bottom-3 left-3 flex max-w-[calc(100%-1.5rem)] items-center gap-3 rounded-full bg-[#e9e9e9]/[0.92] py-1.5 pl-4 pr-1.5 text-left sm:bottom-4 sm:left-4 sm:py-2 sm:pr-2">
                 <span className="min-w-0 truncate text-sm font-semibold tracking-[-0.01em] sm:text-base">

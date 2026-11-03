@@ -14,7 +14,7 @@ export default function Amenities() {
       ref={sectionRef}
       id="sadrzaj"
       aria-labelledby="amenities-title"
-      className="bg-[#e9e9e9] page-x pb-[clamp(6rem,11vw,10rem)] pt-[clamp(2rem,5vw,4rem)] text-[#141414]"
+      className="bg-[#e9e9e9] page-x pb-[clamp(5rem,10vw,9rem)] pt-[clamp(2rem,5vw,4rem)] text-[#141414]"
     >
       <div className="grid items-end gap-6 lg:grid-cols-[1fr_0.6fr]">
         <div>
