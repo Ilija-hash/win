@@ -52,4 +52,39 @@ export const testimonials = [
     date: "Jul 2025.",
     text: "Apartman je čist i na mirnom je mestu, žena koja nas je dočekala bila je ljubazna i sve nam je lepo objasnila, topla preporuka za ovaj apartman. 👍",
   },
+
+  {
+    name: "Ivana",
+    city: "",
+    date: "Jul 2025.",
+    text: "Apartman je lep i čist, opremljen sa svim potrebnim stvarima. Bili smo za vikend koji je bio jako topao, nije imalo potrebe za uključivanjem klime, a terasica je savršena. Vlasnica je divna žena. Vraćamo se opet, sigurno. 😊",
+  },
+
+  {
+    name: "Biljana",
+    city: "",
+    date: "Mart 2025.",
+    text: "Naše iskustvo sa apartmanom kao i gazdaricom je bilo odlično. Sve je bilo uredno, novo i čisto. Sokobanja nije velika tako da sve što vam treba je u blizini apartmana i možete ići peške. Od nas sve preporuke! 🤗",
+  },
+
+  {
+    name: "Milan",
+    city: "",
+    date: "Jul 2025.",
+    text: "Apartman je čist i na mirnom je mestu, žena koja nas je dočekala bila je ljubazna i sve nam je lepo objasnila, topla preporuka za ovaj apartman. 👍",
+  },
+
+  {
+    name: "Djordjevski",
+    city: "",
+    date: "Mart 2025.",
+    text: "Apartman je jako lep, čist i uredan. Ima sve što je potrebno. Domaćica je jako ljubazna, uputila nas je na super mesta za obilazak. Za svaku preporuku.",
+  },
+
+  {
+    name: "Marinković",
+    city: "",
+    date: "Novemar 2024.",
+    text: "Apartman je veoma lepo namesten, svetao, udoban. U apartmanu imate sve sto vam je neophodno cak i za duzi odmor. Krevet je udoban, sa dve vrste jastuka. Dolazimo opet!!!",
+  },
 ];
