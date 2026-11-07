@@ -4,6 +4,7 @@ import gsap from "gsap";
 import { SectionTitle } from "../components/Section";
 import { useReveal } from "../hooks/useReveal";
 import { testimonials } from "../data/testimonials";
+import { prefersReducedMotion } from "../lib/motion";
 
 const CONTROLS = [
   { step: -1, label: "Prethodni utisak", icon: "left" },
@@ -24,7 +25,7 @@ export default function Testimonials() {
       isFirstRender.current = false;
       return undefined;
     }
-    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const reduceMotion = prefersReducedMotion();
     const current = quotesRef.current?.children[active];
     if (!current || reduceMotion) return undefined;
     const tween = gsap.fromTo(current, { y: 32, opacity: 0 }, { y: 0, opacity: 1, duration: 0.7, ease: "power3.out" });
@@ -57,7 +58,7 @@ export default function Testimonials() {
       ref={sectionRef}
       id="utisci"
       aria-labelledby="testimonials-title"
-      className="bg-[#d8d4ca] page-x pb-[clamp(7rem,13vw,12rem)] pt-[clamp(5rem,10vw,9rem)] text-[#141414]"
+      className="bg-sand page-x pb-[clamp(7rem,13vw,12rem)] pt-[clamp(5rem,10vw,9rem)] text-ink"
     >
       <SectionTitle id="testimonials-title">utisci.</SectionTitle>
 
@@ -65,7 +66,7 @@ export default function Testimonials() {
         data-reveal
         onTouchStart={hasMany ? onTouchStart : undefined}
         onTouchEnd={hasMany ? onTouchEnd : undefined}
-        className="mt-[clamp(2.5rem,6vw,4.5rem)] touch-pan-y pointer-coarse:select-none rounded-[1.5rem] bg-[#ece9e2] p-6 sm:rounded-[2rem] sm:p-10 lg:p-14 short:p-6">
+        className="mt-[clamp(2.5rem,6vw,4.5rem)] touch-pan-y pointer-coarse:select-none rounded-[1.5rem] bg-sand-light p-6 sm:rounded-[2rem] sm:p-10 lg:p-14 short:p-6">
         {/* Svi citati su slozeni u istu celiju, pa visina ne skace pri promeni. */}
         <div ref={quotesRef} className="grid">
           {testimonials.map((item, index) => {
@@ -89,7 +90,7 @@ export default function Testimonials() {
                   {item.text}
                 </blockquote>
                 <figcaption className="mt-8 flex items-center gap-3">
-                  <span className="flex h-11 w-11 items-center justify-center rounded-full bg-[#141414] text-sm font-bold text-[#e9e9e9]">
+                  <span className="flex h-11 w-11 items-center justify-center rounded-full bg-ink text-sm font-bold text-paper">
                     {item.name.charAt(0)}
                   </span>
                   <span className="text-sm leading-tight">
@@ -122,7 +123,7 @@ export default function Testimonials() {
                 >
                   <span
                     className={`block h-2.5 rounded-full transition-[width,background-color] duration-500 ${
-                      index === active ? "w-8 bg-[#141414]" : "w-2.5 bg-[#141414]/25 group-hover:bg-[#141414]/50"
+                      index === active ? "w-8 bg-ink" : "w-2.5 bg-ink/25 group-hover:bg-ink/50"
                     }`}
                   />
                 </button>
@@ -135,7 +136,7 @@ export default function Testimonials() {
                   type="button"
                   onClick={() => go(control.step)}
                   aria-label={control.label}
-                  className="flex h-11 w-11 items-center justify-center rounded-full bg-[#141414] text-[#e9e9e9] transition-transform duration-300 hover:scale-105 sm:h-12 sm:w-12"
+                  className="flex h-11 w-11 items-center justify-center rounded-full bg-ink text-paper transition-transform duration-300 hover:scale-105 sm:h-12 sm:w-12"
                 >
                   <Chevron direction={control.icon} className="h-5 w-5" />
                 </button>

@@ -3,6 +3,7 @@ import gsap from "gsap";
 import { PillLink, SectionTitle } from "../components/Section";
 import { useReveal } from "../hooks/useReveal";
 import { getBookingHref } from "../lib/booking";
+import { prefersReducedMotion } from "../lib/motion";
 import terraceImage from "../assets/gallery/terasa/20240412_163603-1600.webp";
 import terraceImage800 from "../assets/gallery/terasa/20240412_163603-800.webp";
 import terraceImage1200 from "../assets/gallery/terasa/20240412_163603-1200.webp";
@@ -14,7 +15,7 @@ export default function Intro() {
 
   // Blagi parallax: slika klizi sporije od okvira.
   useLayoutEffect(() => {
-    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const reduceMotion = prefersReducedMotion();
     if (reduceMotion) return undefined;
     const context = gsap.context(() => {
       gsap.fromTo(
@@ -35,7 +36,7 @@ export default function Intro() {
       ref={sectionRef}
       id="o-stanu"
       aria-labelledby="intro-title"
-      className="bg-[#e9e9e9] page-x py-[clamp(5rem,10vw,9rem)] text-[#141414]"
+      className="bg-paper page-x py-[clamp(5rem,10vw,9rem)] text-ink"
     >
       <div className="grid items-center gap-12 lg:grid-cols-[1.1fr_0.9fr] lg:gap-16">
         <div>
@@ -49,7 +50,7 @@ export default function Intro() {
             {/* Odgovor na pitanje iz hero-a: "nigde nije kao kod kuće?" */}
             Uživajte u udobnosti svog doma, čak i kada ste daleko od njega.
           </p>
-          <div data-reveal className="mt-6 max-w-lg space-y-4 text-base leading-relaxed text-[#141414]/65 sm:text-lg">
+          <div data-reveal className="mt-6 max-w-lg space-y-4 text-base leading-relaxed text-ink/65 sm:text-lg">
             <p>
               Apartman Win se nalazi na prvom spratu nove zgrade, u mirnom delu Sokobanje — blizu parka Banjica i hotela
               Sunce, samo 500 metara od centra grada.
@@ -63,7 +64,7 @@ export default function Intro() {
           </div>
         </div>
 
-        <div data-reveal className="relative aspect-[4/5] overflow-hidden rounded-[1.5rem] bg-[#d7d7d7] sm:aspect-[4/3] sm:rounded-[2rem] lg:aspect-[4/5] short:aspect-[16/9]">
+        <div data-reveal className="relative aspect-[4/5] overflow-hidden rounded-[1.5rem] bg-mist sm:aspect-[4/3] sm:rounded-[2rem] lg:aspect-[4/5] short:aspect-[16/9]">
           <img
             ref={imageRef}
             src={terraceImage800}

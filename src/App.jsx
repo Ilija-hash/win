@@ -17,8 +17,13 @@ import LocationContact from "./sections/LocationContact";
 import Footer from "./sections/Footer";
 import { NAV } from "./data/site";
 import { getBookingHref } from "./lib/booking";
+import { prefersReducedMotion } from "./lib/motion";
 
 gsap.registerPlugin(ScrollTrigger);
+
+// Boja trake browsera na telefonu (= --color-night / --color-paper iz styles.css).
+const THEME_DARK = "#101010";
+const THEME_LIGHT = "#e9e9e9";
 
 function Loader({ onComplete }) {
   const loaderRef = useRef(null);
@@ -31,7 +36,7 @@ function Loader({ onComplete }) {
     const fill = fillRef.current;
     const countWrap = countWrapRef.current;
     const count = countRef.current;
-    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const reduceMotion = prefersReducedMotion();
     const duration = reduceMotion ? 0.1 : 1.3;
     const progress = { value: 0 };
     const updateProgress = () => {
@@ -106,13 +111,13 @@ function Loader({ onComplete }) {
   return (
     <div
       ref={loaderRef}
-      className="loader-screen fixed inset-0 z-[1000] overflow-hidden bg-[#101010] text-[#e9e9e9]"
+      className="loader-screen fixed inset-0 z-[1000] overflow-hidden bg-night text-paper"
       role="progressbar"
       aria-label="Učitavanje stranice"
       aria-valuemin="0"
       aria-valuemax="100"
     >
-      <div ref={fillRef} className="absolute inset-y-0 left-0 w-0 bg-[#e9e9e9]" />
+      <div ref={fillRef} className="absolute inset-y-0 left-0 w-0 bg-paper" />
       <span
         ref={countWrapRef}
         className="loader-count absolute bottom-4 left-5 z-10 inline-grid font-melodrama text-[clamp(9rem,24vw,16rem)] font-normal leading-[0.72] mix-blend-difference sm:bottom-6 sm:left-6"
@@ -133,7 +138,7 @@ function Cursor() {
 
   useEffect(() => {
     const canHover = window.matchMedia("(pointer: fine)").matches;
-    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const reduceMotion = prefersReducedMotion();
     if (!canHover || reduceMotion) return undefined;
 
     const cursor = cursorRef.current;
@@ -221,7 +226,7 @@ function Header({ ready, menuOpen, setMenuOpen, onNavigate }) {
       setOnPanel(true);
       return undefined;
     }
-    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const reduceMotion = prefersReducedMotion();
     const timer = setTimeout(() => setOnPanel(false), reduceMotion ? 0 : 800);
     return () => clearTimeout(timer);
   }, [menuOpen]);
@@ -239,7 +244,7 @@ function Header({ ready, menuOpen, setMenuOpen, onNavigate }) {
 
   // Header se renderuje ispod loadera, ali ulazi tek kada je sajt spreman.
   useLayoutEffect(() => {
-    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const reduceMotion = prefersReducedMotion();
     const context = gsap.context(() => {
       if (!ready) {
         gsap.set(barRef.current.children, { y: -24, opacity: 0 });
@@ -265,7 +270,7 @@ function Header({ ready, menuOpen, setMenuOpen, onNavigate }) {
     <header
       ref={headerRef}
       className={`site-header fixed inset-x-0 top-0 z-50 px-2.5 pt-2.5 sm:px-4 sm:pt-4 lg:px-5 lg:pt-5 ${
-        onPanel ? "is-menu-open text-[#e9e9e9]" : "text-[#141414]"
+        onPanel ? "is-menu-open text-paper" : "text-ink"
       }`}
     >
       <div ref={barRef} className="header-bar flex items-center justify-between">
@@ -306,14 +311,14 @@ function BrandMenu({ open, onClose, onNavigate }) {
     const panel = panelRef.current;
     const brand = brandRef.current;
     const navItems = navRef.current.children;
-    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const reduceMotion = prefersReducedMotion();
     const themeColor = document.querySelector('meta[name="theme-color"]');
     const timeline = gsap.timeline();
 
     if (open) {
       hasOpened.current = true;
       document.body.classList.add("menu-open");
-      if (themeColor) themeColor.content = "#101010";
+      if (themeColor) themeColor.content = THEME_DARK;
       timeline.set(panel, { visibility: "visible" });
       timeline.fromTo(
         panel,
@@ -345,7 +350,7 @@ function BrandMenu({ open, onClose, onNavigate }) {
       timeline.call(() => brand.focus());
     } else {
       document.body.classList.remove("menu-open");
-      if (themeColor) themeColor.content = "#e9e9e9";
+      if (themeColor) themeColor.content = THEME_LIGHT;
       timeline.to(brand, {
         yPercent: -80,
         opacity: 0,
@@ -378,7 +383,7 @@ function BrandMenu({ open, onClose, onNavigate }) {
     <aside
       ref={panelRef}
       id="brand-menu"
-      className="invisible fixed inset-0 z-40 flex flex-col items-center justify-center overflow-hidden bg-[#101010] px-5 pt-20 text-center text-[#e9e9e9] sm:px-8 lg:px-10"
+      className="invisible fixed inset-0 z-40 flex flex-col items-center justify-center overflow-hidden bg-night px-5 pt-20 text-center text-paper sm:px-8 lg:px-10"
       aria-hidden={!open}
       inert={!open}
     >
@@ -429,7 +434,7 @@ function Hero({ ready }) {
   // pocetnom (skrivenom) stanju, da se ne vide pre intro animacije.
   useLayoutEffect(() => {
     if (ready) return undefined;
-    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const reduceMotion = prefersReducedMotion();
     if (reduceMotion) return undefined;
     const context = gsap.context(() => {
       gsap.set(titleRef.current.querySelectorAll("[data-title-line]"), { opacity: 0 });
@@ -441,7 +446,7 @@ function Hero({ ready }) {
   useLayoutEffect(() => {
     if (!ready) return undefined;
 
-    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const reduceMotion = prefersReducedMotion();
     const context = gsap.context(() => {
       const titleLines = titleRef.current.querySelectorAll("[data-title-line]");
       const intro = gsap.timeline({ delay: reduceMotion ? 0 : 0.2 });
@@ -511,13 +516,13 @@ function Hero({ ready }) {
   }, [ready]);
 
   return (
-    <div ref={stageRef} className="relative bg-[#e9e9e9]">
+    <div ref={stageRef} className="relative bg-paper">
       <section className="overflow-hidden">
         <div ref={titleRef} className="relative z-10 flex min-h-svh flex-col items-center justify-center px-4 text-center">
           <div className="overflow-hidden">
             <h1
               data-title-line
-              className="origin-bottom text-[38px] font-black leading-[1.4] tracking-[-0.05em] text-[#141414] max-[390px]:text-[34px] min-[431px]:text-[70px] min-[768px]:text-[80px] min-[992px]:text-[100px] short:!text-[48px]"
+              className="origin-bottom text-[38px] font-extrabold leading-[1.4] tracking-[-0.05em] text-ink max-[390px]:text-[34px] min-[431px]:text-[70px] min-[768px]:text-[80px] min-[992px]:text-[100px] short:!text-[48px]"
             >
               nigde nije kao kod
             </h1>
@@ -525,7 +530,7 @@ function Hero({ ready }) {
           <div className="overflow-hidden px-[0.08em] pb-[0.08em]">
             <p
               data-title-line
-              className="font-melodrama origin-bottom text-[120px] font-light italic leading-none tracking-[-0.045em] text-[#141414] max-[390px]:text-[110px] min-[431px]:text-[140px] min-[992px]:text-[180px] short:!text-[100px]"
+              className="font-melodrama origin-bottom text-[120px] font-normal leading-none tracking-[-0.045em] text-ink max-[390px]:text-[110px] min-[431px]:text-[140px] min-[992px]:text-[180px] short:!text-[100px]"
             >
               kuće?
             </p>
@@ -535,7 +540,7 @@ function Hero({ ready }) {
         <div ref={imageEntranceRef} className="hero-arch flex justify-center">
           <div
             ref={imageRef}
-            className="hero-image relative h-[70svh] w-full overflow-hidden bg-[#d7d7d7] will-change-[clip-path] min-[431px]:h-svh"
+            className="hero-image relative h-[70svh] w-full overflow-hidden bg-mist will-change-[clip-path] min-[431px]:h-svh"
           >
             {/* Siroki ekran dobija siroki isecak - uspravna slika bi se tu razvukla i bila mutna.
                 160vh: kada je ekran uzi od 16:10, slika se skalira po visini (cover). */}
@@ -569,7 +574,7 @@ export default function App() {
   const lenisRef = useRef(null);
 
   useEffect(() => {
-    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const reduceMotion = prefersReducedMotion();
     if (reduceMotion) return undefined;
 
     const lenis = new Lenis({

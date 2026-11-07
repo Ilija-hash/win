@@ -23,15 +23,13 @@
 //  - Sa samo 1 utiskom sakrivaju se tackice i strelice.
 //  - Ako obrises sve utiske (ostane prazno: [ ]), sekcija i link "utisci"
 //    u meniju nestaju sami.
-//
-//  !!! Cetiri utiska ispod su IZMISLJENI PRIMERI - zameni ih pravim. !!!
 
 export const testimonials = [
   {
     name: "Ljubisa",
     city: "",
     date: "Maj 2026.",
-    text: "Jedan od najboljih i najopremljenijih apartmana u kojem smo bili. Sve je novo i čisto. Aparman izuzetno funkcionalan. Kuhinja opremljena svim uredjajima i sudovima koji se mogu zamisliti, kao da cemo da živimo tu a ne da ostanemo par dana.",
+    text: "Jedan od najboljih i najopremljenijih apartmana u kojem smo bili. Sve je novo i čisto. Apartman izuzetno funkcionalan. Kuhinja opremljena svim uredjajima i sudovima koji se mogu zamisliti, kao da cemo da živimo tu a ne da ostanemo par dana.",
   },
 
   {
@@ -68,13 +66,6 @@ export const testimonials = [
   },
 
   {
-    name: "Milan",
-    city: "",
-    date: "Jul 2025.",
-    text: "Apartman je čist i na mirnom je mestu, žena koja nas je dočekala bila je ljubazna i sve nam je lepo objasnila, topla preporuka za ovaj apartman. 👍",
-  },
-
-  {
     name: "Djordjevski",
     city: "",
     date: "Mart 2025.",
@@ -84,7 +75,7 @@ export const testimonials = [
   {
     name: "Marinković",
     city: "",
-    date: "Novemar 2024.",
+    date: "Novembar 2024.",
     text: "Apartman je veoma lepo namesten, svetao, udoban. U apartmanu imate sve sto vam je neophodno cak i za duzi odmor. Krevet je udoban, sa dve vrste jastuka. Dolazimo opet!!!",
   },
 ];

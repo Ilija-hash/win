@@ -2,47 +2,15 @@ import { useLayoutEffect } from "react";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 
 /**
- * Tamne sekcije postavljaju `body.on-dark` dok su ispod kursora (sredina
- * ekrana), da se kursor prebaci na svetlu boju. Brojac podrzava vise
- * tamnih sekcija koje se preklapaju (kontakt + footer).
+ * Tamne sekcije postavljaju `body.on-dark` dok su ispod kursora, da se kursor
+ * prebaci na svetlu boju. Brojac podrzava vise tamnih sekcija koje se
+ * preklapaju (kontakt + footer).
  */
-const counters = { "on-dark": 0 };
+let darkCount = 0;
 
-function toggle(className, on) {
-  counters[className] = Math.max(0, counters[className] + (on ? 1 : -1));
-  document.body.classList.toggle(className, counters[className] > 0);
-}
-
-/** Jedan ScrollTrigger sa latch-om, da se brojac ne pomeri dva puta. */
-function createTrigger(element, className, start, end) {
-  let isOn = false;
-  const on = () => {
-    if (!isOn) {
-      isOn = true;
-      toggle(className, true);
-    }
-  };
-  const off = () => {
-    if (isOn) {
-      isOn = false;
-      toggle(className, false);
-    }
-  };
-
-  const trigger = ScrollTrigger.create({
-    trigger: element,
-    start,
-    end,
-    onEnter: on,
-    onEnterBack: on,
-    onLeave: off,
-    onLeaveBack: off,
-  });
-
-  return () => {
-    off();
-    trigger.kill();
-  };
+function setDark(on) {
+  darkCount = Math.max(0, darkCount + (on ? 1 : -1));
+  document.body.classList.toggle("on-dark", darkCount > 0);
 }
 
 export function useDarkSection(ref) {
@@ -50,9 +18,34 @@ export function useDarkSection(ref) {
     const element = ref.current;
     if (!element) return undefined;
 
-    // Kursor: 80/20, a ne 50/50 - footer je nizak i na dnu stranice, pa mu
-    // vrh nikad ne stigne do sredine ekrana (nema vise skrola).
-    // (Header vise ne zavisi od tamnih sekcija - pilula ima sopstvenu pozadinu.)
-    return createTrigger(element, "on-dark", "top 80%", "bottom 20%");
+    // Latch: brojac se nikad ne pomeri dva puta za istu sekciju.
+    let isOn = false;
+    const on = () => {
+      if (isOn) return;
+      isOn = true;
+      setDark(true);
+    };
+    const off = () => {
+      if (!isOn) return;
+      isOn = false;
+      setDark(false);
+    };
+
+    // 80/20, a ne 50/50 - footer je nizak i na dnu stranice, pa mu vrh
+    // nikad ne stigne do sredine ekrana (nema vise skrola).
+    const trigger = ScrollTrigger.create({
+      trigger: element,
+      start: "top 80%",
+      end: "bottom 20%",
+      onEnter: on,
+      onEnterBack: on,
+      onLeave: off,
+      onLeaveBack: off,
+    });
+
+    return () => {
+      off();
+      trigger.kill();
+    };
   }, [ref]);
 }

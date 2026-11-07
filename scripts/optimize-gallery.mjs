@@ -4,8 +4,8 @@
  *   node scripts/optimize-gallery.mjs
  *
  * Ulaz:  gallery/<soba>/**\/*.jpg   (podfolderi se spajaju u nadrednu sobu)
- * Izlaz: src/assets/gallery/<soba>/<slug>-800.webp
- *        src/assets/gallery/<soba>/<slug>-1600.webp
+ * Izlaz: src/assets/gallery/<soba>/<slug>-800|1200|1600.webp
+ *        (800 kartica, 1200 telefon/tablet u lightbox-u, 1600 veliki ekrani)
  *        src/assets/gallery/manifest.json
  *
  * Idempotentno je - vec obradjene slike preskace, pa ponovno pokretanje traje sekundama.

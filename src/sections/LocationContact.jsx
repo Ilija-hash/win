@@ -63,7 +63,7 @@ function MapEmbed() {
       ref={frameRef}
       data-reveal
       onPointerLeave={() => setActive(false)}
-      className="map-frame relative aspect-[4/3] overflow-hidden rounded-[1.5rem] bg-[#1c1c1c] sm:rounded-[2rem] lg:aspect-auto lg:min-h-[34rem]"
+      className="map-frame relative aspect-[4/3] overflow-hidden rounded-[1.5rem] bg-coal sm:rounded-[2rem] lg:aspect-auto lg:min-h-[34rem]"
     >
       {/* Dok se mapa ne ucita: adresa na tamnoj pozadini */}
       <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 text-center opacity-60">
@@ -90,7 +90,7 @@ function MapEmbed() {
           aria-label="Aktiviraj mapu za pomeranje i zumiranje"
           className="group absolute inset-0 flex items-end justify-center pb-5"
         >
-          <span className="rounded-full bg-[#101010]/80 px-4 py-2 text-xs font-semibold text-[#e9e9e9] opacity-0 transition-opacity duration-300 group-hover:opacity-100 group-focus-visible:opacity-100 pointer-coarse:opacity-100">
+          <span className="rounded-full bg-night/80 px-4 py-2 text-xs font-semibold text-paper opacity-0 transition-opacity duration-300 group-hover:opacity-100 group-focus-visible:opacity-100 pointer-coarse:opacity-100">
             Klikni za interakciju sa mapom
           </span>
         </button>
@@ -110,7 +110,7 @@ export default function LocationContact() {
       ref={sectionRef}
       id="kontakt"
       aria-labelledby="contact-title"
-      className="surface-dark relative z-10 -mt-[2.5rem] rounded-t-[2rem] bg-[#101010] page-x py-[clamp(5rem,10vw,9rem)] text-[#e9e9e9] sm:-mt-[3.5rem] sm:rounded-t-[3.5rem]"
+      className="surface-dark relative z-10 -mt-[2.5rem] rounded-t-[2rem] bg-night page-x py-[clamp(5rem,10vw,9rem)] text-paper sm:-mt-[3.5rem] sm:rounded-t-[3.5rem]"
     >
       <SectionTitle id="contact-title">
         kontakt.
@@ -118,7 +118,7 @@ export default function LocationContact() {
 
       <div className="mt-[clamp(2.5rem,6vw,4.5rem)] grid gap-6 lg:grid-cols-[0.85fr_1.15fr] lg:gap-8">
         <div data-reveal className="flex flex-col">
-          <p className="max-w-md text-base leading-relaxed text-[#e9e9e9]/65 sm:text-lg">
+          <p className="max-w-md text-base leading-relaxed text-paper/65 sm:text-lg">
             Pozovite nas za slobodne termine i cene — odgovaramo brzo, a rado pomažemo i oko dolaska i preporuka u Sokobanji.
           </p>
 

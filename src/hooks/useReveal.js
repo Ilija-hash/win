@@ -1,6 +1,7 @@
 import { useLayoutEffect } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { prefersReducedMotion } from "../lib/motion";
 
 /**
  * Animira [data-reveal] elemente unutar `scopeRef` kada udju u viewport.
@@ -14,7 +15,7 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 export function useReveal(scopeRef) {
   useLayoutEffect(() => {
     const scope = scopeRef.current;
-    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const reduceMotion = prefersReducedMotion();
     if (!scope || reduceMotion) return undefined;
 
     const context = gsap.context(() => {
@@ -39,7 +40,9 @@ export function useReveal(scopeRef) {
       if (fades.length) {
         gsap.set(fades, { y: 48, opacity: 0 });
         ScrollTrigger.batch(fades, {
-          start: "top 88%",
+          // Ranije od naslova (88%): element krece cim proviri, bez praznog prostora.
+          start: "top 95%",
+          interval: 0.05, // podrazumevano 0.1s cekanja da se skupi batch
           once: true,
           onEnter: (batch) =>
             gsap.to(batch, { y: 0, opacity: 1, duration: 0.9, ease: "power3.out", stagger: 0.08, overwrite: true }),

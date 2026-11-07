@@ -4,6 +4,7 @@ import Lightbox from "../components/Lightbox";
 import { SectionTitle } from "../components/Section";
 import { useReveal } from "../hooks/useReveal";
 import { ROOMS } from "../data/site";
+import { preloadPhoto } from "../lib/photos";
 import manifest from "../assets/gallery/manifest.json";
 
 // Vite hesira i verzionise ove fajlove sam.
@@ -62,12 +63,7 @@ const preloaded = new Set();
 function preloadRoom(room) {
   if (preloaded.has(room.id)) return;
   preloaded.add(room.id);
-  room.photos.slice(0, 2).forEach((photo) => {
-    const image = new Image();
-    image.sizes = "100vw";
-    image.srcset = `${photo.mid} 1200w, ${photo.full} 1600w`;
-    image.src = photo.full;
-  });
+  room.photos.slice(0, 2).forEach(preloadPhoto);
 }
 
 // Slika postaje vidljiva tek kada je ucitana (ispod je LQIP), bez naglog "pop"-a.
@@ -199,7 +195,7 @@ export default function Gallery({ onLightboxChange }) {
       ref={sectionRef}
       id="galerija"
       aria-labelledby="gallery-title"
-      className="overflow-hidden bg-[#e9e9e9] pb-[clamp(5rem,10vw,9rem)] pt-[clamp(2rem,5vw,4rem)] text-[#141414]"
+      className="overflow-hidden bg-paper pb-[clamp(5rem,10vw,9rem)] pt-[clamp(2rem,5vw,4rem)] text-ink"
     >
       <div className="flex items-end justify-between gap-6 page-x">
         <SectionTitle id="gallery-title">galerija.</SectionTitle>
@@ -212,7 +208,7 @@ export default function Gallery({ onLightboxChange }) {
               onClick={() => step(control.dir)}
               disabled={edges[control.edge]}
               aria-label={control.label}
-              className="flex h-11 w-11 items-center justify-center rounded-full bg-[#141414] text-[#e9e9e9] transition duration-300 hover:scale-105 disabled:scale-100 disabled:bg-[#141414]/10 disabled:text-[#141414]/35"
+              className="flex h-11 w-11 items-center justify-center rounded-full bg-ink text-paper transition duration-300 hover:scale-105 disabled:scale-100 disabled:bg-ink/10 disabled:text-ink/35"
             >
               <Chevron direction={control.icon} className="h-5 w-5" />
             </button>
@@ -238,7 +234,7 @@ export default function Gallery({ onLightboxChange }) {
               onTouchStart={() => preloadRoom(room)}
               onFocus={() => preloadRoom(room)}
               aria-label={`${room.label} - otvori ${photoCount(room.photos.length)}`}
-              className="group relative block aspect-[4/5] max-h-[70svh] min-h-[260px] w-full overflow-hidden rounded-[1.5rem] bg-[#d7d7d7] sm:rounded-[1.75rem]"
+              className="group relative block aspect-[4/5] max-h-[70svh] min-h-[260px] w-full overflow-hidden rounded-[1.5rem] bg-mist sm:rounded-[1.75rem]"
               style={{ backgroundImage: `url(${room.cover.lqip})`, backgroundSize: "cover", backgroundPosition: "center" }}
             >
               <img
@@ -255,14 +251,14 @@ export default function Gallery({ onLightboxChange }) {
                 height={room.cover.h}
                 className="gallery-card-image pointer-events-none absolute inset-0 h-full w-full select-none object-cover transition-[transform,opacity] duration-[900ms] ease-out group-hover:scale-[1.04]"
               />
-              <span className="absolute bottom-3 left-3 flex max-w-[calc(100%-1.5rem)] items-center gap-3 rounded-full bg-[#e9e9e9]/[0.92] py-1.5 pl-4 pr-1.5 text-left sm:bottom-4 sm:left-4 sm:py-2 sm:pr-2">
+              <span className="absolute bottom-3 left-3 flex max-w-[calc(100%-1.5rem)] items-center gap-3 rounded-full bg-paper/[0.92] py-1.5 pl-4 pr-1.5 text-left sm:bottom-4 sm:left-4 sm:py-2 sm:pr-2">
                 <span className="min-w-0 truncate text-sm font-semibold tracking-[-0.01em] sm:text-base">
                   {room.label}
                   <span className="ml-2 font-medium opacity-60">{room.photos.length}</span>
                 </span>
                 <span
                   aria-hidden="true"
-                  className="flex h-8 w-8 flex-none items-center justify-center rounded-full bg-[#141414] text-[#e9e9e9] transition-transform duration-300 group-hover:translate-x-0.5"
+                  className="flex h-8 w-8 flex-none items-center justify-center rounded-full bg-ink text-paper transition-transform duration-300 group-hover:translate-x-0.5"
                 >
                   <Chevron className="h-3.5 w-3.5" />
                 </span>

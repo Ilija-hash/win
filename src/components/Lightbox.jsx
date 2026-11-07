@@ -2,14 +2,13 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import gsap from "gsap";
 import { Chevron, UiIcon } from "./Icons";
+import { prefersReducedMotion } from "../lib/motion";
+import { largeSrcSet, preloadPhoto } from "../lib/photos";
 
 const ZOOM = 2.5;
 const DOUBLE_TAP_MS = 300;
 
 const clamp = (value) => Math.min(100, Math.max(0, value));
-
-// Telefon/tablet dobijaju 1200px, veci ekrani 1600px (zoom ostaje ostar).
-const largeSrcSet = (photo) => (photo.mid ? `${photo.mid} 1200w, ${photo.full} 1600w` : undefined);
 
 export default function Lightbox({ photos, title, index, onClose, onNavigate }) {
   const panelRef = useRef(null);
@@ -101,7 +100,7 @@ export default function Lightbox({ photos, title, index, onClose, onNavigate }) 
   // Ulazna animacija panela
   useEffect(() => {
     if (!open) return undefined;
-    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const reduceMotion = prefersReducedMotion();
     const tween = gsap.fromTo(
       panelRef.current,
       { opacity: 0 },
@@ -113,7 +112,7 @@ export default function Lightbox({ photos, title, index, onClose, onNavigate }) 
   // Prelaz izmedju slika
   useEffect(() => {
     if (!open || !figureRef.current) return undefined;
-    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const reduceMotion = prefersReducedMotion();
     const tween = gsap.fromTo(
       figureRef.current,
       { opacity: 0, scale: 0.985 },
@@ -125,14 +124,7 @@ export default function Lightbox({ photos, title, index, onClose, onNavigate }) 
   // Sledeca i prethodna slika se skidaju unapred - prelaz strelicom/swipe-om je bez cekanja.
   useEffect(() => {
     if (!open || photos.length < 2) return;
-    [index + 1, index - 1].forEach((neighbour) => {
-      const item = photos[(neighbour + photos.length) % photos.length];
-      const image = new Image();
-      image.sizes = "100vw";
-      const srcSet = largeSrcSet(item);
-      if (srcSet) image.srcset = srcSet;
-      image.src = item.full;
-    });
+    [index + 1, index - 1].forEach((neighbour) => preloadPhoto(photos[(neighbour + photos.length) % photos.length]));
   }, [index, open, photos]);
 
   // Aktivna mala slika uvek ostaje vidljiva u traci.
@@ -210,12 +202,12 @@ export default function Lightbox({ photos, title, index, onClose, onNavigate }) 
   };
 
   const navButton =
-    "absolute top-1/2 z-10 flex h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full bg-[#101010]/45 backdrop-blur-md transition duration-300 hover:bg-[#101010]/70";
+    "absolute top-1/2 z-10 flex h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full bg-night/45 backdrop-blur-md transition duration-300 hover:bg-night/70";
 
   return createPortal(
     <div
       ref={panelRef}
-      className="fixed inset-0 z-[900] flex flex-col bg-[#101010] text-[#e9e9e9]"
+      className="fixed inset-0 z-[900] flex flex-col bg-night text-paper"
       role="dialog"
       aria-modal="true"
       aria-label={`${title ?? photo.label} - fotografija ${index + 1} od ${photos.length}`}
@@ -296,7 +288,7 @@ export default function Lightbox({ photos, title, index, onClose, onNavigate }) 
             aria-label={`Fotografija ${itemIndex + 1}`}
             aria-current={itemIndex === index}
             className={`h-12 w-12 flex-none overflow-hidden rounded-lg transition duration-300 sm:h-14 sm:w-14 sm:rounded-xl ${
-              itemIndex === index ? "opacity-100 ring-2 ring-[#e9e9e9] ring-offset-2 ring-offset-[#101010]" : "opacity-40 hover:opacity-80"
+              itemIndex === index ? "opacity-100 ring-2 ring-paper ring-offset-2 ring-offset-night" : "opacity-40 hover:opacity-80"
             }`}
           >
             <img src={item.thumb} alt="" loading="lazy" decoding="async" className="h-full w-full object-cover" />

@@ -5,7 +5,8 @@ import { testimonials } from "./testimonials";
 
 export const CONTACT = {
   phone: "0611187040",
-  phoneHref: "tel:0611187040",
+  // Medjunarodni format: poziv radi i sa strane SIM kartice.
+  phoneHref: "tel:+381611187040",
   email: "win.sokobanja@gmail.com",
   address: "Prevalac 9, Sokobanja",
   instagram: "@win_sokobanja",

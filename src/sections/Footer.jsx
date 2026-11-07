@@ -14,8 +14,8 @@ export default function Footer({ onNavigate, inert = false }) {
   };
 
   return (
-    <footer ref={footerRef} inert={inert} className="surface-dark bg-[#101010] page-x pb-[clamp(1.5rem,3vw,2.5rem)] text-[#e9e9e9]">
-      <div className="flex flex-wrap items-center justify-between gap-x-8 gap-y-5 border-t border-[#e9e9e9]/10 pt-6 sm:pt-8">
+    <footer ref={footerRef} inert={inert} className="surface-dark bg-night page-x pb-[clamp(1.5rem,3vw,2.5rem)] text-paper">
+      <div className="flex flex-wrap items-center justify-between gap-x-8 gap-y-5 border-t border-paper/10 pt-6 sm:pt-8">
         <a
           href="#top"
           onClick={go("top")}
@@ -51,8 +51,8 @@ export default function Footer({ onNavigate, inert = false }) {
         </a>
       </div>
 
-      <div className="mt-6 flex flex-col gap-1 border-t border-[#e9e9e9]/10 pt-5 text-xs font-semibold text-[#e9e9e9]/50 sm:flex-row sm:items-center sm:justify-between">
-        <a href={CONTACT.mapsLink} target="_blank" rel="noreferrer" className="transition-colors duration-300 hover:text-[#e9e9e9]">
+      <div className="mt-6 flex flex-col gap-1 border-t border-paper/10 pt-5 text-xs font-semibold text-paper/50 sm:flex-row sm:items-center sm:justify-between">
+        <a href={CONTACT.mapsLink} target="_blank" rel="noreferrer" className="transition-colors duration-300 hover:text-paper">
           {CONTACT.address}
         </a>
         <p>&copy; {new Date().getFullYear()} win. Sva prava zadržana.</p>
